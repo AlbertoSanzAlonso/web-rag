@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+*.sqlite3
+
+# Entornos virtuales
+env/
+venv/
+.venv/
+*.env
+*.conda
+*.condarc
+
+# Configuración de IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Logs
+*.log
+
+# Bases de datos y vectores
+webdata.db
+vectordb/
+*.db
+
+# Archivos temporales
+*.tmp
+*.swp
+.DS_Store
+
+# Cachés
+*.cache
+.ipynb_checkpoints/
+
+# Configuración sensible
+config.py
