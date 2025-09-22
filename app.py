@@ -49,7 +49,6 @@ def initialize_data():
     if not documents:
         raise ValueError("No se encontraron documentos en la DB para inicializar el vector store.")
     
-    documents = load_documents_from_db(DB_PATH)
     print(f"Documentos cargados: {len(documents)}")
     for doc in documents[:5]:
         print(doc.metadata, doc.page_content[:100])
@@ -57,12 +56,10 @@ def initialize_data():
     # Crear vector store desde documentos
     vectordb = Chroma.from_documents(
         documents,
-        embedding_function=embedding,
+        embedding=embedding,
         persist_directory="./vectordb"
     )
 
-    # Persistir la base de datos
-    vectordb.persist()
 
     # Crear retriever
     retriever = vectordb.as_retriever(search_type="similarity", search_kwargs={"k": 3})
