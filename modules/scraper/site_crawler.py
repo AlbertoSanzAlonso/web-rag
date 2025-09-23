@@ -4,24 +4,13 @@ utilizando la clase Website para extraer título, texto y links de cada página,
 y guarda los resultados en una base de datos SQLite.
 """
 
-from urllib.parse import urljoin, urlparse
-from scraper import Website, summarize 
+from modules.scraper.scraper import Website, summarize 
 import sqlite3
 import time
 import requests
 from config import BASE_URL
 import json
-
-# ---------------------------
-# Funciones auxiliares
-# ---------------------------
-
-def normalize_links(base_url, links):
-    return [urljoin(base_url, link) for link in links]
-
-def is_same_domain(base_url, link):
-    """Comprueba si un link pertenece al mismo dominio que base_url"""
-    return urlparse(base_url).netloc == urlparse(link).netloc
+from modules.utils.utils import normalize_links, is_same_domain
 
 # ---------------------------
 # Scraping de una página

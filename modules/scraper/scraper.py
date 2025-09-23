@@ -2,7 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import openai
 from config import OPENAI_API_KEY
-from prompts import system_prompt
+from modules.rag.prompts import system_prompt
 
 openai.api_key = OPENAI_API_KEY
 
@@ -69,11 +69,4 @@ def summarize(url: str) -> str:
         print(f"❌ Error en la llamada a OpenAI: {e}")
         return "❌ Error al generar el resumen."
 
-def get_links_user_prompt(website):
-    user_prompt = f"Aquí hay una lista de enlaces de la página web {website.url} - "
-    user_prompt += "Por favor, decide cuáles de estos son enlaces web relevantes para un folleto sobre la empresa. Responde con la URL https completa en formato JSON. \
-No incluyas Términos y Condiciones, Privacidad ni enlaces de correo electrónico.\n"
-    user_prompt += "Links (puede que algunos sean links relativos):\n"
-    user_prompt += "\n".join(website.links)
-    return user_prompt
 
