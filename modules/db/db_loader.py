@@ -1,5 +1,5 @@
 import sqlite3
-from langchain.docstore.document import Document
+from langchain_core.documents import Document
 from config import DB_PATH
 
 def load_documents_from_db(db_path=DB_PATH):

@@ -5,8 +5,7 @@ from modules.rag.rag import create_qa_chain
 import os
 
 
-
-def refresh_data(base_url, db_path, embedding, api_key, max_pages=50, delay=0.5):
+def refresh_data(base_url, db_path, embedding, api_key, provider="openai", embedding_key=None, max_pages=50, delay=0.5):
     if not os.path.exists(db_path):
         print(f"🚀 DB no encontrada. Iniciando scraping...")
         all_data = scrape_website(base_url, max_pages=max_pages, delay=delay)
@@ -22,7 +21,9 @@ def refresh_data(base_url, db_path, embedding, api_key, max_pages=50, delay=0.5)
     print(f"📄 Documentos cargados: {len(documents)}")
     vectordb, retriever = build_vectordb(documents, embedding)
     print("🔹 Vector store creado.")
-    qa = create_qa_chain(retriever, api_key)
-    print("🤖 QA chain inicializada.")
+    
+    # Pasamos el provider para crear el LLM correcto
+    qa = create_qa_chain(retriever, provider, api_key, embedding_key)
+    print(f"🤖 QA chain inicializada con {provider}.")
     
     return vectordb, retriever, qa
