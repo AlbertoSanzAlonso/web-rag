@@ -1,7 +1,7 @@
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
 from langchain_anthropic import ChatAnthropic
-from langchain.chains import RetrievalQA
+from langchain_classic.chains import RetrievalQA
 
 def create_embeddings(provider: str, api_key: str):
     """
