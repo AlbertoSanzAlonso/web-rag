@@ -1,0 +1,75 @@
+
+export type Language = 'en' | 'es';
+
+export const translations = {
+    en: {
+        setup: {
+            title: "Start Knowledge Agent",
+            subtitle: "Configure your LLM provider and target website.",
+            targetWebsite: "Target Website",
+            placeholderUrl: "https://example.com",
+            openaiKey: "OpenAI API Key",
+            geminiKey: "Google API Key",
+            claudeKey: "Anthropic API Key",
+            embeddingKey: "OpenAI API Key",
+            embeddingHint: "for embeddings",
+            claudeHint: "Claude requires an external embedding model.",
+            autoAuth: "Auto-Auth:",
+            authServerSide: "Tokens are managed on the server.",
+            groqFree: "Groq is configured as a **free option** with the server API Key.",
+            groqHint: "Using LLaMA 3.1 8B · Local Embeddings",
+            openaiHint: "OpenAI (GPT-3.5) · OpenAI Embeddings",
+            otherHint: "This provider requires manual server configuration.",
+            initialize: "Initialize Agent",
+            connecting: "Connecting...",
+            indexing: "Indexing...",
+            indexingPages: "Indexing... {pages} pages",
+            powered: "AI Powered • Multi-Provider Support",
+        },
+        chat: {
+            back: "Back",
+            active: "Agent Active",
+            context: "Context:",
+            ready: "Ready. I've analyzed {url}. What do you need to know?",
+            askPlaceholder: "Ask something about the content...",
+            sourcesUsed: "{count} source{plural} used",
+            accuracyWarning: "AI responses can be inaccurate. Double check important information.",
+            errorTitle: "Error:",
+        }
+    },
+    es: {
+        setup: {
+            title: "Iniciar Agente de Conocimiento",
+            subtitle: "Configura tu proveedor de LLM y el sitio web objetivo.",
+            targetWebsite: "Sitio Web Objetivo",
+            placeholderUrl: "https://ejemplo.com",
+            openaiKey: "Clave API de OpenAI",
+            geminiKey: "Clave API de Google",
+            claudeKey: "Clave API de Anthropic",
+            embeddingKey: "Clave API de OpenAI",
+            embeddingHint: "para embeddings",
+            claudeHint: "Claude requiere un modelo de embedding externo.",
+            autoAuth: "Auto-Auth:",
+            authServerSide: "Los tokens se gestionan en el servidor.",
+            groqFree: "Groq está configurado como **opción gratuita** con la clave del servidor.",
+            groqHint: "Usando LLaMA 3.1 8B · Embeddings Locales",
+            openaiHint: "OpenAI (GPT-3.5) · Embeddings de OpenAI",
+            otherHint: "Este proveedor requiere configuración manual en el servidor.",
+            initialize: "Inicializar Agente",
+            connecting: "Conectando...",
+            indexing: "Indexando...",
+            indexingPages: "Indexando... {pages} páginas",
+            powered: "Potenciado por IA • Soporte Multi-Proveedor",
+        },
+        chat: {
+            back: "Volver",
+            active: "Agente Activo",
+            context: "Contexto:",
+            ready: "Listo. He analizado {url}. ¿Qué necesitas saber?",
+            askPlaceholder: "Pregunta algo sobre el contenido...",
+            sourcesUsed: "{count} fuente{plural} usada{plural}",
+            accuracyWarning: "Las respuestas de la IA pueden ser inexactas. Verifica la información importante.",
+            errorTitle: "Error:",
+        }
+    }
+};

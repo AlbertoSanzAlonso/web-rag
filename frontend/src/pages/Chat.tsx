@@ -1,7 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
-import { Send, ChevronLeft, Sparkles, Loader2 } from 'lucide-react';
+import { Send, ChevronLeft, Sparkles, Loader2, Languages } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLanguage } from '../App';
 
 const API_URL = (import.meta.env.VITE_API_URL ?? 'http://localhost:8001') + '/api';
 
@@ -19,11 +20,16 @@ interface Message {
 
 export default function ChatPage() {
     const navigate = useNavigate();
+    const { t, language, setLanguage } = useLanguage();
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [sourceUrl, setSourceUrl] = useState('');
     const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    const toggleLanguage = () => {
+        setLanguage(language === 'en' ? 'es' : 'en');
+    };
 
     useEffect(() => {
         fetch(`${API_URL}/status`)
@@ -34,12 +40,15 @@ export default function ChatPage() {
                 } else {
                     setSourceUrl(data.current_url);
                     if (messages.length === 0) {
-                        setMessages([{ role: 'assistant', content: `Ready. I've analyzed ${data.current_url}. What do you need to know?` }]);
+                        setMessages([{
+                            role: 'assistant',
+                            content: t('chat.ready').replace('{url}', data.current_url)
+                        }]);
                     }
                 }
             })
             .catch(() => navigate('/'));
-    }, [navigate]);
+    }, [navigate, language]); // Added language to refresh if it changes initially
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -115,7 +124,7 @@ export default function ChatPage() {
                 const updated = [...prev];
                 updated[updated.length - 1] = {
                     ...updated[updated.length - 1],
-                    content: `Error: ${err.message}`
+                    content: `${t('chat.errorTitle')} ${err.message}`
                 };
                 return updated;
             });
@@ -138,17 +147,25 @@ export default function ChatPage() {
                     className="flex items-center gap-2 px-3 py-2 text-zinc-400 hover:text-white hover:bg-white/5 rounded-lg transition-all text-sm group"
                 >
                     <ChevronLeft className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" />
-                    <span>Back</span>
+                    <span>{t('chat.back')}</span>
                 </button>
 
                 <div className="flex flex-col items-center">
                     <div className="flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
-                        <span className="text-sm font-semibold text-white">Agent Active</span>
+                        <span className="text-sm font-semibold text-white">{t('chat.active')}</span>
                     </div>
                 </div>
 
-                <div className="w-[70px]" /> {/* Spacer */}
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={toggleLanguage}
+                        className="flex items-center gap-2 px-3 py-1.5 bg-[#18181b] border border-white/5 rounded-lg text-zinc-400 hover:text-white transition-all text-xs font-medium"
+                    >
+                        <Languages className="h-3.5 w-3.5" />
+                        <span>{language === 'en' ? 'EN' : 'ES'}</span>
+                    </button>
+                </div>
             </header>
 
             {/* Messages Area */}
@@ -158,7 +175,7 @@ export default function ChatPage() {
                     {messages.length > 0 && (
                         <div className="flex justify-center mb-8">
                             <span className="px-3 py-1 bg-zinc-900 border border-zinc-800 rounded-full text-[10px] text-zinc-500 uppercase tracking-wider font-semibold">
-                                Context: {new URL(sourceUrl || 'https://example.com').hostname}
+                                {t('chat.context')} {new URL(sourceUrl || 'https://example.com').hostname}
                             </span>
                         </div>
                     )}
@@ -198,7 +215,9 @@ export default function ChatPage() {
                                             className="flex flex-col gap-1.5 pl-1"
                                         >
                                             <p className="text-[10px] uppercase tracking-widest text-zinc-600 font-medium">
-                                                📎 {msg.sources.length} fuente{msg.sources.length > 1 ? 's' : ''} usada{msg.sources.length > 1 ? 's' : ''}
+                                                📎 {t('chat.sourcesUsed')
+                                                    .replace('{count}', msg.sources.length.toString())
+                                                    .replace('{plural}', msg.sources.length > 1 ? (language === 'en' ? 's' : 's') : '')}
                                             </p>
                                             <div className="flex flex-wrap gap-2">
                                                 {msg.sources.map((src, si) => (
@@ -256,7 +275,7 @@ export default function ChatPage() {
                         type="text"
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
-                        placeholder="Ask something about the content..."
+                        placeholder={t('chat.askPlaceholder')}
                         disabled={isLoading}
                         className="w-full h-14 bg-[#18181b] rounded-2xl border border-zinc-800 pl-6 pr-14 text-base text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/50 transition-all shadow-xl"
                     />
@@ -269,7 +288,7 @@ export default function ChatPage() {
                     </button>
                 </form>
                 <p className="text-center text-xs text-zinc-600 mt-3 font-medium">
-                    AI responses can be inaccurate. Double check important information.
+                    {t('chat.accuracyWarning')}
                 </p>
             </div>
         </div>

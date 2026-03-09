@@ -1,7 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
-import { ArrowRight, Command, Globe, Key, Loader2, Cpu } from 'lucide-react';
+import { ArrowRight, Command, Globe, Key, Loader2, Cpu, Languages } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLanguage } from '../App';
 
 const API_URL = (import.meta.env.VITE_API_URL ?? 'http://localhost:8001') + '/api';
 
@@ -9,6 +10,7 @@ type Provider = 'openai' | 'gemini' | 'claude' | 'groq';
 
 export default function SetupPage() {
     const navigate = useNavigate();
+    const { t, language, setLanguage } = useLanguage();
     const [apiKey, setApiKey] = useState('');
     const [embeddingKey, setEmbeddingKey] = useState(''); // Only for Claude
     const [targetUrl, setTargetUrl] = useState('');
@@ -16,6 +18,10 @@ export default function SetupPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
     const [statusMsg, setStatusMsg] = useState('');
+
+    const toggleLanguage = () => {
+        setLanguage(language === 'en' ? 'es' : 'en');
+    };
 
     const handleConfigure = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -55,7 +61,7 @@ export default function SetupPage() {
                     ready = true;
                 } else if (statusData.indexing) {
                     const pages = statusData.pages_done ?? 0;
-                    setStatusMsg(pages > 0 ? `Indexando... ${pages} páginas` : 'Indexando...');
+                    setStatusMsg(pages > 0 ? t('setup.indexingPages').replace('{pages}', pages.toString()) : t('setup.indexing'));
                 }
             }
 
@@ -69,6 +75,17 @@ export default function SetupPage() {
 
     return (
         <div className="min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden bg-[#09090b]">
+            {/* Language Toggle */}
+            <div className="absolute top-6 right-6 z-20">
+                <button
+                    onClick={toggleLanguage}
+                    className="flex items-center gap-2 px-4 py-2 bg-[#18181b] border border-white/5 rounded-xl text-zinc-400 hover:text-white transition-all text-sm font-medium"
+                >
+                    <Languages className="h-4 w-4" />
+                    <span>{language === 'en' ? 'English' : 'Español'}</span>
+                </button>
+            </div>
+
             {/* Background Gradients */}
             <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
                 <div className="absolute top-[-20%] right-[20%] w-[60%] h-[60%] rounded-full bg-indigo-500/5 blur-[120px]" />
@@ -89,10 +106,10 @@ export default function SetupPage() {
                             <Command className="h-6 w-6 text-white" />
                         </div>
                         <h1 className="text-2xl font-bold tracking-tight text-white mb-2">
-                            Start Knowledge Agent
+                            {t('setup.title')}
                         </h1>
                         <p className="text-zinc-500 text-sm">
-                            Configure your LLM provider and target website.
+                            {t('setup.subtitle')}
                         </p>
                     </div>
 
@@ -118,7 +135,7 @@ export default function SetupPage() {
 
                         {/* URL Input */}
                         <div>
-                            <label className="block text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1.5 pl-1">Target Website</label>
+                            <label className="block text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1.5 pl-1">{t('setup.targetWebsite')}</label>
                             <div className="relative group">
                                 <Globe className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 group-focus-within:text-white transition-colors" />
                                 <input
@@ -131,7 +148,7 @@ export default function SetupPage() {
                                             setTargetUrl(`https://${targetUrl}`);
                                         }
                                     }}
-                                    placeholder="https://example.com"
+                                    placeholder={t('setup.placeholderUrl')}
                                     className="w-full h-11 bg-[#18181b] border border-zinc-800 text-white text-sm rounded-xl pl-10 pr-4 placeholder:text-zinc-600 focus:bg-[#202024] input-ring"
                                 />
                             </div>
@@ -149,9 +166,9 @@ export default function SetupPage() {
                                     className="overflow-hidden"
                                 >
                                     <label className="block text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1.5 pl-1">
-                                        {provider === 'openai' ? 'OpenAI API Key' :
-                                            provider === 'gemini' ? 'Google API Key' :
-                                                'Anthropic API Key'}
+                                        {provider === 'openai' ? t('setup.openaiKey') :
+                                            provider === 'gemini' ? t('setup.geminiKey') :
+                                                t('setup.claudeKey')}
                                     </label>
                                     <div className="relative group">
                                         <Key className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 group-focus-within:text-white transition-colors" />
@@ -168,7 +185,7 @@ export default function SetupPage() {
                                     {provider === 'claude' && (
                                         <div className="mt-4">
                                             <label className="block text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1.5 pl-1">
-                                                OpenAI API Key <span className="text-[10px] text-zinc-600 normal-case">(for embeddings)</span>
+                                                {t('setup.embeddingKey')} <span className="text-[10px] text-zinc-600 normal-case">({t('setup.embeddingHint')})</span>
                                             </label>
                                             <div className="relative group">
                                                 <Cpu className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 group-focus-within:text-white transition-colors" />
@@ -182,7 +199,7 @@ export default function SetupPage() {
                                                 />
                                             </div>
                                             <p className="text-[10px] text-zinc-500 mt-1 pl-1">
-                                                Claude requires an external embedding model.
+                                                {t('setup.claudeHint')}
                                             </p>
                                         </div>
                                     )}
@@ -196,17 +213,14 @@ export default function SetupPage() {
                                     className="p-4 bg-indigo-500/5 border border-indigo-500/10 rounded-xl space-y-2 overflow-hidden"
                                 >
                                     <p className="text-xs text-zinc-400 leading-relaxed text-center">
-                                        🚀 <span className="text-white font-medium">Groq</span> está configurado como **opción gratuita** con la API Key del servidor.
+                                        🚀 <span className="text-white font-medium">Groq</span> {t('setup.groqFree')}
                                     </p>
                                     <p className="text-[10px] text-zinc-500 text-center italic">
-                                        Usando LLaMA 3.1 8B · Embeddings Locales
+                                        {t('setup.groqHint')}
                                     </p>
                                 </motion.div>
                             )}
                         </AnimatePresence>
-
-
-
 
                         {error && (
                             <motion.div
@@ -227,11 +241,11 @@ export default function SetupPage() {
                             {isLoading ? (
                                 <>
                                     <Loader2 className="h-4 w-4 animate-spin" />
-                                    <span>{statusMsg || 'Connecting...'}</span>
+                                    <span>{statusMsg || t('setup.connecting')}</span>
                                 </>
                             ) : (
                                 <>
-                                    <span>Initialize Agent</span>
+                                    <span>{t('setup.initialize')}</span>
                                     <ArrowRight className="h-4 w-4" />
                                 </>
                             )}
@@ -241,7 +255,7 @@ export default function SetupPage() {
 
                 <div className="text-center mt-8">
                     <p className="text-[10px] text-zinc-600 uppercase tracking-widest font-medium">
-                        AI Powered • Multi-Provider Support
+                        {t('setup.powered')}
                     </p>
                 </div>
             </motion.div >
