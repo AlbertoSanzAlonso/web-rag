@@ -1,11 +1,11 @@
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
-import { ArrowRight, Command, Database, Globe, Key, Loader2, Cpu } from 'lucide-react';
+import { ArrowRight, Command, Globe, Key, Loader2, Cpu } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const API_URL = 'http://localhost:8000/api';
+const API_URL = 'http://localhost:8001/api';
 
-type Provider = 'openai' | 'gemini' | 'claude';
+type Provider = 'openai' | 'gemini' | 'claude' | 'mock';
 
 export default function SetupPage() {
     const navigate = useNavigate();
@@ -15,6 +15,7 @@ export default function SetupPage() {
     const [provider, setProvider] = useState<Provider>('openai');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
+    const [statusMsg, setStatusMsg] = useState('');
 
     const handleConfigure = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -29,6 +30,7 @@ export default function SetupPage() {
                 embedding_key: provider === 'claude' ? embeddingKey : undefined
             };
 
+            // 1. Lanzar la indexación (responde inmediatamente)
             const res = await fetch(`${API_URL}/configure`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -40,10 +42,28 @@ export default function SetupPage() {
                 throw new Error(err.detail || 'Configuration failed');
             }
 
+            // 2. Polling hasta que el agente esté listo
+            let ready = false;
+            while (!ready) {
+                await new Promise(r => setTimeout(r, 1200));
+                const statusRes = await fetch(`${API_URL}/status`);
+                const statusData = await statusRes.json();
+
+                if (statusData.error) throw new Error(statusData.error);
+
+                if (statusData.configured && !statusData.indexing) {
+                    ready = true;
+                } else if (statusData.indexing) {
+                    const pages = statusData.pages_done ?? 0;
+                    setStatusMsg(pages > 0 ? `Indexando... ${pages} páginas` : 'Indexando...');
+                }
+            }
+
             navigate('/chat');
         } catch (err: any) {
             setError(err.message);
             setIsLoading(false);
+            setStatusMsg('');
         }
     };
 
@@ -80,8 +100,8 @@ export default function SetupPage() {
                     <form onSubmit={handleConfigure} className="space-y-5">
 
                         {/* Provider Selector */}
-                        <div className="grid grid-cols-3 gap-2 bg-[#18181b] p-1 rounded-xl border border-zinc-800">
-                            {(['openai', 'gemini', 'claude'] as Provider[]).map((p) => (
+                        <div className="grid grid-cols-4 gap-2 bg-[#18181b] p-1 rounded-xl border border-zinc-800">
+                            {(['openai', 'gemini', 'claude', 'mock'] as Provider[]).map((p) => (
                                 <button
                                     key={p}
                                     type="button"
@@ -186,7 +206,7 @@ export default function SetupPage() {
                             {isLoading ? (
                                 <>
                                     <Loader2 className="h-4 w-4 animate-spin" />
-                                    <span>Connecting...</span>
+                                    <span>{statusMsg || 'Connecting...'}</span>
                                 </>
                             ) : (
                                 <>

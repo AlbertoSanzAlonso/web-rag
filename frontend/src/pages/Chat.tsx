@@ -1,9 +1,9 @@
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Bot, Send, User, ChevronLeft, Sparkles, Loader2 } from 'lucide-react';
+import { Send, ChevronLeft, Sparkles, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const API_URL = 'http://localhost:8000/api';
+const API_URL = 'http://localhost:8001/api';
 
 interface Message {
     role: 'user' | 'assistant';
@@ -47,18 +47,57 @@ export default function ChatPage() {
         setInput('');
         setIsLoading(true);
 
+        // Añadir mensaje vacío del asistente que se irá rellenando
+        setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
+
         try {
-            const res = await fetch(`${API_URL}/ask`, {
+            const res = await fetch(`${API_URL}/ask/stream`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ query: userMsg })
             });
 
-            if (!res.ok) throw new Error('Failed to get answer');
-            const data = await res.json();
-            setMessages(prev => [...prev, { role: 'assistant', content: data.answer }]);
+            if (!res.ok || !res.body) throw new Error('Failed to get answer');
+
+            const reader = res.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n');
+                buffer = lines.pop() ?? '';  // Guardar línea incompleta
+
+                for (const line of lines) {
+                    if (!line.startsWith('data: ')) continue;
+                    const raw = line.slice(6).trim();
+                    if (raw === '[DONE]') break;
+                    try {
+                        const { token } = JSON.parse(raw);
+                        setMessages(prev => {
+                            const updated = [...prev];
+                            const last = updated[updated.length - 1];
+                            updated[updated.length - 1] = {
+                                ...last,
+                                content: last.content + token
+                            };
+                            return updated;
+                        });
+                    } catch { /* ignorar líneas malformadas */ }
+                }
+            }
         } catch (err: any) {
-            setMessages(prev => [...prev, { role: 'assistant', content: `Error: ${err.message}` }]);
+            setMessages(prev => {
+                const updated = [...prev];
+                updated[updated.length - 1] = {
+                    ...updated[updated.length - 1],
+                    content: `Error: ${err.message}`
+                };
+                return updated;
+            });
         } finally {
             setIsLoading(false);
         }
@@ -119,16 +158,20 @@ export default function ChatPage() {
                                 )}
 
                                 <div className={`max-w-[85%] sm:max-w-[75%] rounded-3xl px-6 py-4 text-[15px] leading-7 shadow-sm ${msg.role === 'user'
-                                        ? 'bg-indigo-600 text-white rounded-tr-sm shadow-indigo-500/10'
-                                        : 'bg-[#18181b] border border-white/5 text-zinc-200 rounded-tl-sm'
+                                    ? 'bg-indigo-600 text-white rounded-tr-sm shadow-indigo-500/10'
+                                    : 'bg-[#18181b] border border-white/5 text-zinc-200 rounded-tl-sm'
                                     }`}>
                                     {msg.content}
+                                    {/* Cursor parpadeante mientras llegan tokens */}
+                                    {msg.role === 'assistant' && isLoading && i === messages.length - 1 && (
+                                        <span className="inline-block w-[2px] h-[1em] bg-indigo-400 ml-0.5 align-middle animate-pulse" />
+                                    )}
                                 </div>
                             </motion.div>
                         ))}
                     </AnimatePresence>
 
-                    {isLoading && (
+                    {isLoading && messages[messages.length - 1]?.content === '' && (
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
