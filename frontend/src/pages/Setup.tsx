@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
-import { ArrowRight, Command, Globe, Loader2 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { ArrowRight, Command, Globe, Key, Loader2, Cpu } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const API_URL = (import.meta.env.VITE_API_URL ?? 'http://localhost:8001') + '/api';
 
@@ -9,6 +9,8 @@ type Provider = 'openai' | 'gemini' | 'claude' | 'groq';
 
 export default function SetupPage() {
     const navigate = useNavigate();
+    const [apiKey, setApiKey] = useState('');
+    const [embeddingKey, setEmbeddingKey] = useState(''); // Only for Claude
     const [targetUrl, setTargetUrl] = useState('');
     const [provider, setProvider] = useState<Provider>('openai');
     const [isLoading, setIsLoading] = useState(false);
@@ -22,10 +24,10 @@ export default function SetupPage() {
 
         try {
             const payload: Record<string, string | undefined> = {
-                api_key: '',
+                api_key: apiKey,
                 base_url: targetUrl,
                 provider: provider,
-                embedding_key: undefined,
+                embedding_key: provider === 'claude' ? embeddingKey : undefined,
             };
 
             // 1. Lanzar la indexación (responde inmediatamente)
@@ -136,17 +138,72 @@ export default function SetupPage() {
                         </div>
 
 
-                        {/* API Info message */}
-                        <div className="p-4 bg-indigo-500/5 border border-indigo-500/10 rounded-xl space-y-2">
-                            <p className="text-xs text-zinc-400 leading-relaxed text-center">
-                                🔒 <span className="text-white font-medium">Auto-Auth:</span> Los tokens se gestionan en el servidor.
-                            </p>
-                            <p className="text-[10px] text-zinc-500 text-center italic">
-                                {provider === 'groq' ? 'Groq (LLaMA 3.1 8B) · Embeddings Locales' :
-                                    provider === 'openai' ? 'OpenAI (GPT-3.5) · Embeddings OpenAI' :
-                                        'Este proveedor requiere configuración manual en el servidor.'}
-                            </p>
-                        </div>
+                        {/* API Key Input */}
+                        <AnimatePresence mode="wait">
+                            {provider !== 'groq' ? (
+                                <motion.div
+                                    key="api-key-input"
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                    className="overflow-hidden"
+                                >
+                                    <label className="block text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1.5 pl-1">
+                                        {provider === 'openai' ? 'OpenAI API Key' :
+                                            provider === 'gemini' ? 'Google API Key' :
+                                                'Anthropic API Key'}
+                                    </label>
+                                    <div className="relative group">
+                                        <Key className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 group-focus-within:text-white transition-colors" />
+                                        <input
+                                            type="password"
+                                            required
+                                            value={apiKey}
+                                            onChange={(e) => setApiKey(e.target.value)}
+                                            placeholder={provider === 'gemini' ? 'AIza...' : 'sk-...'}
+                                            className="w-full h-11 bg-[#18181b] border border-zinc-800 text-white text-sm rounded-xl pl-10 pr-4 placeholder:text-zinc-600 focus:bg-[#202024] input-ring"
+                                        />
+                                    </div>
+
+                                    {provider === 'claude' && (
+                                        <div className="mt-4">
+                                            <label className="block text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1.5 pl-1">
+                                                OpenAI API Key <span className="text-[10px] text-zinc-600 normal-case">(for embeddings)</span>
+                                            </label>
+                                            <div className="relative group">
+                                                <Cpu className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 group-focus-within:text-white transition-colors" />
+                                                <input
+                                                    type="password"
+                                                    required
+                                                    value={embeddingKey}
+                                                    onChange={(e) => setEmbeddingKey(e.target.value)}
+                                                    placeholder="sk-..."
+                                                    className="w-full h-11 bg-[#18181b] border border-zinc-800 text-white text-sm rounded-xl pl-10 pr-4 placeholder:text-zinc-600 focus:bg-[#202024] input-ring"
+                                                />
+                                            </div>
+                                            <p className="text-[10px] text-zinc-500 mt-1 pl-1">
+                                                Claude requires an external embedding model.
+                                            </p>
+                                        </div>
+                                    )}
+                                </motion.div>
+                            ) : (
+                                <motion.div
+                                    key="groq-info"
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                    className="p-4 bg-indigo-500/5 border border-indigo-500/10 rounded-xl space-y-2 overflow-hidden"
+                                >
+                                    <p className="text-xs text-zinc-400 leading-relaxed text-center">
+                                        🚀 <span className="text-white font-medium">Groq</span> está configurado como **opción gratuita** con la API Key del servidor.
+                                    </p>
+                                    <p className="text-[10px] text-zinc-500 text-center italic">
+                                        Usando LLaMA 3.1 8B · Embeddings Locales
+                                    </p>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
 
 
 
