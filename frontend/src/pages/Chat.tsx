@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Send, ChevronLeft, Sparkles, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const API_URL = 'http://localhost:8001/api';
+const API_URL = (import.meta.env.VITE_API_URL ?? 'http://localhost:8001') + '/api';
 
 interface Message {
     role: 'user' | 'assistant';
