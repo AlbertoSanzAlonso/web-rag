@@ -9,7 +9,7 @@ import shutil
 import asyncio
 import json
 from typing import Optional
-from modules.config import DB_PATH
+from modules.config import DB_PATH, GROQ_API_KEY
 
 CONFIG_FILE = "app_config.json"
 
@@ -123,11 +123,15 @@ async def run_indexing(request: ConfigRequest):
 
         ollama_url = None  # Groq no necesita URL local
 
+        target_api_key = request.api_key
+        if request.provider == "groq" and not target_api_key:
+            target_api_key = GROQ_API_KEY
+
         vectordb, retriever, qa = await refresh_data_async(
             base_url=request.base_url,
             db_path=app_state["config"]["db_path"],
             embedding=embedding,
-            api_key=request.api_key,
+            api_key=target_api_key,
             provider=request.provider,
             embedding_key=request.embedding_key,
             on_progress=on_progress,

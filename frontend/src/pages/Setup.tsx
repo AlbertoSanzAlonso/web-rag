@@ -139,33 +139,50 @@ export default function SetupPage() {
 
 
                         {/* API Key Input */}
-                        <div>
-                            <label className="block text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1.5 pl-1">
-                                {provider === 'openai' ? 'OpenAI API Key' :
-                                    provider === 'gemini' ? 'Google API Key' :
-                                        provider === 'groq' ? 'Groq API Key' :
-                                            'Anthropic API Key'}
-                            </label>
-                            <div className="relative group">
-                                <Key className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 group-focus-within:text-white transition-colors" />
-                                <input
-                                    type="password"
-                                    required
-                                    value={apiKey}
-                                    onChange={(e) => setApiKey(e.target.value)}
-                                    placeholder={provider === 'groq' ? 'gsk_...' : provider === 'gemini' ? 'AIza...' : 'sk-...'}
-                                    className="w-full h-11 bg-[#18181b] border border-zinc-800 text-white text-sm rounded-xl pl-10 pr-4 placeholder:text-zinc-600 focus:bg-[#202024] input-ring"
-                                />
-                            </div>
-                            {provider === 'groq' && (
-                                <p className="text-[10px] text-zinc-500 mt-1 pl-1">
-                                    Gratis en{' '}
-                                    <a href="https://console.groq.com" target="_blank" rel="noreferrer"
-                                        className="text-indigo-400 hover:underline">console.groq.com</a>
-                                    {' '}· LLaMA 3.1 8B · Embeddings locales sin key
-                                </p>
+                        <AnimatePresence mode="wait">
+                            {provider !== 'groq' && (
+                                <motion.div
+                                    key="api-key-input"
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                    className="overflow-hidden"
+                                >
+                                    <label className="block text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1.5 pl-1">
+                                        {provider === 'openai' ? 'OpenAI API Key' :
+                                            provider === 'gemini' ? 'Google API Key' :
+                                                'Anthropic API Key'}
+                                    </label>
+                                    <div className="relative group">
+                                        <Key className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 group-focus-within:text-white transition-colors" />
+                                        <input
+                                            type="password"
+                                            required
+                                            value={apiKey}
+                                            onChange={(e) => setApiKey(e.target.value)}
+                                            placeholder={provider === 'gemini' ? 'AIza...' : 'sk-...'}
+                                            className="w-full h-11 bg-[#18181b] border border-zinc-800 text-white text-sm rounded-xl pl-10 pr-4 placeholder:text-zinc-600 focus:bg-[#202024] input-ring"
+                                        />
+                                    </div>
+                                </motion.div>
                             )}
-                        </div>
+                        </AnimatePresence>
+
+                        {provider === 'groq' && (
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                className="p-4 bg-indigo-500/5 border border-indigo-500/10 rounded-xl"
+                            >
+                                <p className="text-xs text-zinc-400 leading-relaxed text-center">
+                                    🚀 <span className="text-white font-medium">Groq</span> está configurado con tu API Key del servidor.
+                                    <br />
+                                    <span className="text-[10px] text-zinc-500 mt-1 block italic text-center">
+                                        Usando LLaMA 3.1 8B · Embeddings locales
+                                    </span>
+                                </p>
+                            </motion.div>
+                        )}
 
 
                         {/* Extra Input for Claude (Embeddings) */}
