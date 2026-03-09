@@ -16,8 +16,13 @@ def load_documents_from_db(db_path=DB_PATH):
 
     raw_documents = []
     for url, title, text in rows:
+        if not text or not text.strip():
+            continue
         content = f"Título: {title}\nContenido: {text}"
-        raw_documents.append(Document(page_content=content, metadata={"url": url}))
+        raw_documents.append(Document(
+            page_content=content,
+            metadata={"source": url, "title": title, "url": url}
+        ))
     
     # Implementación de Chunking
     text_splitter = RecursiveCharacterTextSplitter(

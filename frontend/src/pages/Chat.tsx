@@ -5,9 +5,16 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const API_URL = (import.meta.env.VITE_API_URL ?? 'http://localhost:8001') + '/api';
 
+interface Source {
+    url: string;
+    title: string;
+    snippet: string;
+}
+
 interface Message {
     role: 'user' | 'assistant';
     content: string;
+    sources?: Source[];
 }
 
 export default function ChatPage() {
@@ -74,18 +81,32 @@ export default function ChatPage() {
                 for (const line of lines) {
                     if (!line.startsWith('data: ')) continue;
                     const raw = line.slice(6).trim();
-                    if (raw === '[DONE]') break;
+                    if (raw === '[DONE]') continue;
                     try {
-                        const { token } = JSON.parse(raw);
-                        setMessages(prev => {
-                            const updated = [...prev];
-                            const last = updated[updated.length - 1];
-                            updated[updated.length - 1] = {
-                                ...last,
-                                content: last.content + token
-                            };
-                            return updated;
-                        });
+                        const parsed = JSON.parse(raw);
+
+                        if (parsed.token !== undefined) {
+                            // Token de texto — añadir al mensaje actual
+                            setMessages(prev => {
+                                const updated = [...prev];
+                                const last = updated[updated.length - 1];
+                                updated[updated.length - 1] = {
+                                    ...last,
+                                    content: last.content + parsed.token
+                                };
+                                return updated;
+                            });
+                        } else if (parsed.sources) {
+                            // Fuentes RAG — adjuntar al último mensaje
+                            setMessages(prev => {
+                                const updated = [...prev];
+                                updated[updated.length - 1] = {
+                                    ...updated[updated.length - 1],
+                                    sources: parsed.sources
+                                };
+                                return updated;
+                            });
+                        }
                     } catch { /* ignorar líneas malformadas */ }
                 }
             }
@@ -157,14 +178,51 @@ export default function ChatPage() {
                                     </div>
                                 )}
 
-                                <div className={`max-w-[85%] sm:max-w-[75%] rounded-3xl px-6 py-4 text-[15px] leading-7 shadow-sm ${msg.role === 'user'
-                                    ? 'bg-indigo-600 text-white rounded-tr-sm shadow-indigo-500/10'
-                                    : 'bg-[#18181b] border border-white/5 text-zinc-200 rounded-tl-sm'
-                                    }`}>
-                                    {msg.content}
-                                    {/* Cursor parpadeante mientras llegan tokens */}
-                                    {msg.role === 'assistant' && isLoading && i === messages.length - 1 && (
-                                        <span className="inline-block w-[2px] h-[1em] bg-indigo-400 ml-0.5 align-middle animate-pulse" />
+                                <div className={`flex flex-col gap-2 max-w-[85%] sm:max-w-[75%]`}>
+                                    <div className={`rounded-3xl px-6 py-4 text-[15px] leading-7 shadow-sm ${msg.role === 'user'
+                                        ? 'bg-indigo-600 text-white rounded-tr-sm shadow-indigo-500/10'
+                                        : 'bg-[#18181b] border border-white/5 text-zinc-200 rounded-tl-sm'
+                                        }`}>
+                                        {msg.content}
+                                        {/* Cursor parpadeante mientras llegan tokens */}
+                                        {msg.role === 'assistant' && isLoading && i === messages.length - 1 && (
+                                            <span className="inline-block w-[2px] h-[1em] bg-indigo-400 ml-0.5 align-middle animate-pulse" />
+                                        )}
+                                    </div>
+
+                                    {/* Panel de fuentes RAG */}
+                                    {msg.role === 'assistant' && msg.sources && msg.sources.length > 0 && (
+                                        <motion.div
+                                            initial={{ opacity: 0, height: 0 }}
+                                            animate={{ opacity: 1, height: 'auto' }}
+                                            className="flex flex-col gap-1.5 pl-1"
+                                        >
+                                            <p className="text-[10px] uppercase tracking-widest text-zinc-600 font-medium">
+                                                📎 {msg.sources.length} fuente{msg.sources.length > 1 ? 's' : ''} usada{msg.sources.length > 1 ? 's' : ''}
+                                            </p>
+                                            <div className="flex flex-wrap gap-2">
+                                                {msg.sources.map((src, si) => (
+                                                    <div key={si} className="group relative">
+                                                        <a
+                                                            href={src.url}
+                                                            target="_blank"
+                                                            rel="noreferrer"
+                                                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-zinc-900 border border-zinc-800 hover:border-indigo-500/50 hover:bg-zinc-800 transition-all text-[11px] text-zinc-400 hover:text-zinc-200"
+                                                        >
+                                                            <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 flex-shrink-0" />
+                                                            <span className="max-w-[180px] truncate">{src.title || src.url}</span>
+                                                        </a>
+                                                        {/* Tooltip con snippet */}
+                                                        {src.snippet && (
+                                                            <div className="absolute bottom-full left-0 mb-2 w-72 p-3 rounded-xl bg-zinc-900 border border-zinc-700 text-[11px] text-zinc-400 leading-5 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-10 shadow-xl">
+                                                                <p className="text-zinc-300 font-medium mb-1 truncate">{src.title}</p>
+                                                                <p className="line-clamp-4">{src.snippet}</p>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </motion.div>
                                     )}
                                 </div>
                             </motion.div>

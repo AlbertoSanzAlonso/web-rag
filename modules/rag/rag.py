@@ -11,10 +11,13 @@ def create_embeddings(provider: str, api_key: str, base_url: str = None):
         return GoogleGenerativeAIEmbeddings(model="models/embedding-001", google_api_key=api_key)
     elif provider == "claude":
         return OpenAIEmbeddings(openai_api_key=api_key)
-    elif provider == "ollama":
-        from langchain_community.embeddings import OllamaEmbeddings
-        ollama_url = base_url or "http://localhost:11434"
-        return OllamaEmbeddings(model="nomic-embed-text", base_url=ollama_url)
+    elif provider == "groq":
+        # Groq no tiene API de embeddings — usamos HuggingFace local (sin key)
+        from langchain_community.embeddings import HuggingFaceEmbeddings
+        return HuggingFaceEmbeddings(
+            model_name="sentence-transformers/all-MiniLM-L6-v2",
+            model_kwargs={"device": "cpu"}
+        )
     else:
         raise ValueError(f"Provider {provider} not supported for embeddings")
 
@@ -25,10 +28,13 @@ def create_llm(provider: str, api_key: str, base_url: str = None):
         return ChatGoogleGenerativeAI(google_api_key=api_key, temperature=0, model="gemini-1.5-flash")
     elif provider == "claude":
         return ChatAnthropic(anthropic_api_key=api_key, temperature=0, model_name="claude-3-opus-20240229")
-    elif provider == "ollama":
-        from langchain_community.llms import Ollama
-        ollama_url = base_url or "http://localhost:11434"
-        return Ollama(model="llama3.2", base_url=ollama_url, temperature=0)
+    elif provider == "groq":
+        from langchain_groq import ChatGroq
+        return ChatGroq(
+            groq_api_key=api_key,
+            model_name="llama-3.1-8b-instant",
+            temperature=0
+        )
     else:
         raise ValueError(f"Provider {provider} not supported")
 
