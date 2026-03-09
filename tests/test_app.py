@@ -4,9 +4,9 @@ from modules.db.db_loader import load_documents_from_db
 from modules.vector.vector_store import build_vectordb
 from modules.rag.rag import create_qa_chain
 from app import app
-from config import DB_PATH
+from modules.config import DB_PATH
 from langchain_openai import OpenAIEmbeddings
-from config import OPENAI_API_KEY
+from modules.config import OPENAI_API_KEY
 
 client = TestClient(app)
 
@@ -16,12 +16,12 @@ embedding = OpenAIEmbeddings(openai_api_key=OPENAI_API_KEY)
 # Tests FastAPI endpoints
 # ---------------------------
 def test_ask_endpoint():
-    response = client.get("/ask", params={"query": "Hola"})
+    response = client.post("/api/ask", json={"query": "Hola"})
     assert response.status_code == 200
     assert "answer" in response.json()
 
 def test_update_endpoint():
-    response = client.post("/update")
+    response = client.post("/api/configure", json={"base_url": "https://example.com", "api_key": "test_key"})
     assert response.status_code == 200
     assert response.json()["status"] in ["ok", "error"]
 

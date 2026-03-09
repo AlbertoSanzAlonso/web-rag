@@ -9,6 +9,7 @@ import shutil
 import asyncio
 import json
 from typing import Optional
+from modules.config import DB_PATH
 
 CONFIG_FILE = "app_config.json"
 
@@ -83,7 +84,7 @@ app_state = {
         "base_url": None,
         "provider": "openai",
         "embedding_key": None,
-        "db_path": "webdata.db"
+        "db_path": DB_PATH
     }
 }
 

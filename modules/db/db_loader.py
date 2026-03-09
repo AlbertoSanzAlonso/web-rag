@@ -1,7 +1,7 @@
 import sqlite3
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from config import DB_PATH
+from modules.config import DB_PATH
 
 def load_documents_from_db(db_path=DB_PATH):
     """

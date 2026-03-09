@@ -1,7 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 import openai
-from config import OPENAI_API_KEY
+from modules.config import OPENAI_API_KEY
 from modules.rag.prompts import system_prompt
 
 openai.api_key = OPENAI_API_KEY
