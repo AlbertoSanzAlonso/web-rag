@@ -2,8 +2,7 @@ from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-from modules.data_manager import refresh_data_async
-from modules.rag.rag import create_embeddings
+# Heavy imports moved inside handlers to speed up startup
 import os
 import shutil
 import asyncio
@@ -15,8 +14,14 @@ CONFIG_FILE = "app_config.json"
 
 app = FastAPI()
 
+print(f"DEBUG: Starting app. PORT={os.getenv('PORT')}")
+
 @app.on_event("startup")
 async def on_startup():
+    """Lanzamos la restauración en segundo plano para no bloquear el arranque inicial."""
+    asyncio.create_task(restore_state())
+
+async def restore_state():
     """Al arrancar el servidor, restaura el estado si existe config + índice guardados."""
     from modules.vector.vector_store import load_vectordb, FAISS_INDEX_PATH
     from modules.rag.rag import create_embeddings, create_qa_chain
@@ -25,6 +30,7 @@ async def on_startup():
         return  # Nada que restaurar
 
     try:
+        print("🔍 Restaurando sesión previa...")
         with open(CONFIG_FILE) as f:
             saved = json.load(f)
 
@@ -34,7 +40,6 @@ async def on_startup():
         ollama_url = saved.get("ollama_url")
         base_url = saved.get("base_url", "")
 
-        # Restaurar config
         app_state["config"].update({
             "api_key": api_key,
             "base_url": base_url,
@@ -42,7 +47,6 @@ async def on_startup():
             "embedding_key": embedding_key,
         })
 
-        # Reconstruir embeddings y cargar FAISS
         if provider == "ollama":
             embedding = create_embeddings(provider, "", base_url=ollama_url or "http://localhost:11434")
         else:
@@ -101,6 +105,9 @@ class AskRequest(BaseModel):
 
 async def run_indexing(request: ConfigRequest):
     """Tarea de fondo: scrapea el sitio y construye el índice vectorial."""
+    from modules.data_manager import refresh_data_async
+    from modules.rag.rag import create_embeddings
+
     app_state["indexing"] = True
     app_state["pages_done"] = 0
     app_state["error"] = None
@@ -226,6 +233,7 @@ async def ask_stream(request: AskRequest):
 
     provider = app_state["config"].get("provider", "openai")
     chain = app_state["qa_chain"]
+    from modules.rag.rag import create_embeddings # Not used here but keeping imports safe
 
     async def generate_mock():
         """Para mock: llama sync en un executor, luego hace stream palabra a palabra."""
