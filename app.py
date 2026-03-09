@@ -9,7 +9,7 @@ import shutil
 import asyncio
 import json
 from typing import Optional
-from modules.config import DB_PATH, GROQ_API_KEY
+from modules.config import DB_PATH, GROQ_API_KEY, OPENAI_API_KEY
 
 CONFIG_FILE = "app_config.json"
 
@@ -124,8 +124,11 @@ async def run_indexing(request: ConfigRequest):
         ollama_url = None  # Groq no necesita URL local
 
         target_api_key = request.api_key
-        if request.provider == "groq" and not target_api_key:
-            target_api_key = GROQ_API_KEY
+        if not target_api_key:
+            if request.provider == "groq":
+                target_api_key = GROQ_API_KEY
+            elif request.provider == "openai":
+                target_api_key = OPENAI_API_KEY
 
         vectordb, retriever, qa = await refresh_data_async(
             base_url=request.base_url,
