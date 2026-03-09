@@ -31,5 +31,9 @@ Render starts scanning for a listening port as soon as the container starts.
 -   **Minimize `requirements.txt`**: Don't include unused heavy libraries like `transformers`, `torch`, `sentence-transformers` if not absolutely necessary.
 
 ### 4. Health Checks
--   Ensure `/api/status` returns `200 OK` even if the agent is still loading its state in the background.
--   Render uses this path to verify the service is "Live".
+- Ensure `/api/status` returns `200 OK` even if the loading `asyncio.create_task` is still running in the background.
+- Render uses this path to verify the service is "Live".
+
+### 5. Frontend & CORS Sync
+- **Backend**: Set `allow_origins=["*"]` in `app.py`'s `CORSMiddleware` for production.
+- **Frontend (Vercel)**: Always define `VITE_API_URL` without a trailing slash (e.g., `https://backend.onrender.com`) to match internal path construction.

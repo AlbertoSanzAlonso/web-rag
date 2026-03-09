@@ -6,8 +6,8 @@ This project is a high-performance **Retrieval-Augmented Generation (RAG)** appl
 The "Knowledge Agent" indexes websites, stores their content in a local vector database (FAISS), and allows users to query that information through multiple AI providers (OpenAI, Gemini, Claude, Groq).
 
 ## 🧩 Architecture Overview
-- **Backend**: FastAPI (Python 3.11)
-- **Frontend**: Vite + React + Tailwind + Framer Motion
+- **Backend**: FastAPI (Python 3.11) - Deployed on Render (`https://web-rag-glxd.onrender.com`)
+- **Frontend**: Vite + React + Tailwind + Framer Motion - Deployed on Vercel
 - **RAG Engine**: LangChain + FAISS (Vector DB) + BGE-Embeddings (FastEmbed)
 - **Storage**: SQLite (Scraped data) + FAISS (Binary index)
 
@@ -18,6 +18,7 @@ As an AI agent working on this codebase, you must follow these specific patterns
 2.  **RAM Efficiency**: Use `FastEmbed` for local embeddings (Groq). Never use `sentence-transformers` as it pulls in PyTorch, which exceeds the 512MB limit.
 3.  **Modular Config**: All environment variables and hardcoded constants must live in `modules/config.py`.
 4.  **Async Scraping**: Use the existing `scrape_website_async` for crawling to prevent blocking the event loop.
+5.  **Environment Sync**: When updating the backend URL, ensure `VITE_API_URL` is updated in Vercel's Environment Variables and a new deployment is triggered.
 
 ## 📂 Specialized Skills
 Detailed documentation for specific subsystems can be found in:
