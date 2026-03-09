@@ -7,7 +7,7 @@ import os
 
 
 async def refresh_data_async(base_url, db_path, embedding, api_key, provider="openai",
-                              embedding_key=None, max_pages=50, on_progress=None):
+                              embedding_key=None, max_pages=50, on_progress=None, ollama_url=None):
     """
     Versión asíncrona de refresh_data.
     - Si la DB no existe, hace scraping async del sitio.
@@ -35,7 +35,7 @@ async def refresh_data_async(base_url, db_path, embedding, api_key, provider="op
     vectordb, retriever = build_vectordb(documents, embedding)
     print("🔹 Vector store creado.")
 
-    qa = create_qa_chain(retriever, provider, api_key, embedding_key)
+    qa = create_qa_chain(retriever, provider, api_key, embedding_key, base_url=ollama_url)
     print(f"🤖 QA chain inicializada con {provider}.")
 
     return vectordb, retriever, qa

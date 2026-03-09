@@ -5,12 +5,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const API_URL = (import.meta.env.VITE_API_URL ?? 'http://localhost:8001') + '/api';
 
-type Provider = 'openai' | 'gemini' | 'claude' | 'mock';
+type Provider = 'openai' | 'gemini' | 'claude' | 'ollama';
 
 export default function SetupPage() {
     const navigate = useNavigate();
     const [apiKey, setApiKey] = useState('');
     const [embeddingKey, setEmbeddingKey] = useState(''); // Only for Claude
+    const [ollamaUrl, setOllamaUrl] = useState('http://localhost:11434');
     const [targetUrl, setTargetUrl] = useState('');
     const [provider, setProvider] = useState<Provider>('openai');
     const [isLoading, setIsLoading] = useState(false);
@@ -23,11 +24,12 @@ export default function SetupPage() {
         setError('');
 
         try {
-            const payload = {
-                api_key: apiKey,
+            const payload: Record<string, string | undefined> = {
+                api_key: provider === 'ollama' ? '' : apiKey,
                 base_url: targetUrl,
                 provider: provider,
-                embedding_key: provider === 'claude' ? embeddingKey : undefined
+                embedding_key: provider === 'claude' ? embeddingKey : undefined,
+                ollama_url: provider === 'ollama' ? ollamaUrl : undefined,
             };
 
             // 1. Lanzar la indexación (responde inmediatamente)
@@ -101,7 +103,7 @@ export default function SetupPage() {
 
                         {/* Provider Selector */}
                         <div className="grid grid-cols-4 gap-2 bg-[#18181b] p-1 rounded-xl border border-zinc-800">
-                            {(['openai', 'gemini', 'claude', 'mock'] as Provider[]).map((p) => (
+                            {(['openai', 'gemini', 'claude', 'ollama'] as Provider[]).map((p) => (
                                 <button
                                     key={p}
                                     type="button"
@@ -137,25 +139,56 @@ export default function SetupPage() {
                             </div>
                         </div>
 
-                        {/* API Key Input */}
-                        <div>
-                            <label className="block text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1.5 pl-1">
-                                {provider === 'openai' ? 'OpenAI API Key' :
-                                    provider === 'gemini' ? 'Google API Key' :
-                                        'Anthropic API Key'}
-                            </label>
-                            <div className="relative group">
-                                <Key className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 group-focus-within:text-white transition-colors" />
-                                <input
-                                    type="password"
-                                    required
-                                    value={apiKey}
-                                    onChange={(e) => setApiKey(e.target.value)}
-                                    placeholder="sk-..."
-                                    className="w-full h-11 bg-[#18181b] border border-zinc-800 text-white text-sm rounded-xl pl-10 pr-4 placeholder:text-zinc-600 focus:bg-[#202024] input-ring"
-                                />
+                        {/* API Key Input — oculto para Ollama */}
+                        {provider !== 'ollama' && (
+                            <div>
+                                <label className="block text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1.5 pl-1">
+                                    {provider === 'openai' ? 'OpenAI API Key' :
+                                        provider === 'gemini' ? 'Google API Key' :
+                                            'Anthropic API Key'}
+                                </label>
+                                <div className="relative group">
+                                    <Key className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 group-focus-within:text-white transition-colors" />
+                                    <input
+                                        type="password"
+                                        required
+                                        value={apiKey}
+                                        onChange={(e) => setApiKey(e.target.value)}
+                                        placeholder="sk-..."
+                                        className="w-full h-11 bg-[#18181b] border border-zinc-800 text-white text-sm rounded-xl pl-10 pr-4 placeholder:text-zinc-600 focus:bg-[#202024] input-ring"
+                                    />
+                                </div>
                             </div>
-                        </div>
+                        )}
+
+                        {/* Ollama URL — solo para Ollama */}
+                        <AnimatePresence>
+                            {provider === 'ollama' && (
+                                <motion.div
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                    className="overflow-hidden"
+                                >
+                                    <label className="block text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1.5 pl-1">
+                                        Ollama Server URL
+                                    </label>
+                                    <div className="relative group">
+                                        <Cpu className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 group-focus-within:text-white transition-colors" />
+                                        <input
+                                            type="url"
+                                            value={ollamaUrl}
+                                            onChange={(e) => setOllamaUrl(e.target.value)}
+                                            placeholder="http://localhost:11434"
+                                            className="w-full h-11 bg-[#18181b] border border-zinc-800 text-white text-sm rounded-xl pl-10 pr-4 placeholder:text-zinc-600 focus:bg-[#202024] input-ring"
+                                        />
+                                    </div>
+                                    <p className="text-[10px] text-zinc-500 mt-1 pl-1">
+                                        Requiere Ollama instalado local con <code className="text-zinc-400">llama3.2</code> y <code className="text-zinc-400">nomic-embed-text</code>.
+                                    </p>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
 
                         {/* Extra Input for Claude (Embeddings) */}
                         <AnimatePresence>

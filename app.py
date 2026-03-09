@@ -37,10 +37,11 @@ app_state = {
 }
 
 class ConfigRequest(BaseModel):
-    api_key: str
-    base_url: str
-    provider: str = "openai"  # openai, gemini, claude, mock
+    api_key: str = ""           # Vacío para Ollama
+    base_url: str               # URL del sitio a indexar
+    provider: str = "openai"    # openai, gemini, claude, ollama
     embedding_key: Optional[str] = None
+    ollama_url: Optional[str] = None  # URL del servidor Ollama (default: http://localhost:11434)
 
 class AskRequest(BaseModel):
     query: str
@@ -57,13 +58,18 @@ async def run_indexing(request: ConfigRequest):
         app_state["pages_done"] += 1
 
     try:
-        embed_key = request.api_key
-        if request.provider == "claude":
-            if not request.embedding_key:
-                raise ValueError("Claude requires an OpenAI API Key for embeddings.")
-            embed_key = request.embedding_key
+        if request.provider == "ollama":
+            ollama_url = request.ollama_url or "http://localhost:11434"
+            embedding = create_embeddings(request.provider, "", base_url=ollama_url)
+        else:
+            embed_key = request.api_key
+            if request.provider == "claude":
+                if not request.embedding_key:
+                    raise ValueError("Claude requires an OpenAI API Key for embeddings.")
+                embed_key = request.embedding_key
+            embedding = create_embeddings(request.provider, embed_key)
 
-        embedding = create_embeddings(request.provider, embed_key)
+        ollama_url = request.ollama_url if request.provider == "ollama" else None
 
         vectordb, retriever, qa = await refresh_data_async(
             base_url=request.base_url,
@@ -73,6 +79,7 @@ async def run_indexing(request: ConfigRequest):
             provider=request.provider,
             embedding_key=request.embedding_key,
             on_progress=on_progress,
+            ollama_url=ollama_url,
         )
 
         app_state["vectordb"] = vectordb
@@ -189,7 +196,8 @@ async def ask_stream(request: AskRequest):
 
         yield "data: [DONE]\n\n"
 
-    generator = generate_mock() if provider == "mock" else generate_real()
+    # Ollama y los providers reales usan el path de streaming nativo
+    generator = generate_real()
 
     return StreamingResponse(
         generator,
