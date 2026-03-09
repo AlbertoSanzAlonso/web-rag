@@ -12,11 +12,10 @@ def create_embeddings(provider: str, api_key: str, base_url: str = None):
     elif provider == "claude":
         return OpenAIEmbeddings(openai_api_key=api_key)
     elif provider == "groq":
-        # Groq no tiene API de embeddings — usamos HuggingFace local (sin key)
-        from langchain_community.embeddings import HuggingFaceEmbeddings
-        return HuggingFaceEmbeddings(
-            model_name="sentence-transformers/all-MiniLM-L6-v2",
-            model_kwargs={"device": "cpu"}
+        # FastEmbed is much lighter and faster than HuggingFace/Torch for Render Free Tier
+        from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
+        return FastEmbedEmbeddings(
+            model_name="BAAI/bge-small-en-v1.5" # Very lightweight and high performance
         )
     else:
         raise ValueError(f"Provider {provider} not supported for embeddings")
