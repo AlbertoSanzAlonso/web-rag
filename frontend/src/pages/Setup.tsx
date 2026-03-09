@@ -4,7 +4,7 @@ import { ArrowRight, Command, Globe, Key, Loader2, Cpu, Languages } from 'lucide
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '../App';
 
-const API_URL = (import.meta.env.VITE_API_URL ?? 'http://localhost:8001') + '/api';
+const API_URL = (import.meta.env.VITE_API_URL ?? 'https://web-rag-glxd.onrender.com') + '/api';
 
 type Provider = 'openai' | 'gemini' | 'claude' | 'groq';
 
