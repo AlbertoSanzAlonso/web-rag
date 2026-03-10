@@ -7,7 +7,7 @@ Una herramienta potente y estética para convertir cualquier sitio web en una ba
 - **Scraping Dinámico**: Analiza y extrae contenido de cualquier URL en tiempo real.
 - **Multi-Proveedor de IA**: Soporte para OpenAI (GPT), Google (Gemini) y Anthropic (Claude).
 - **Interfaz Moderna**: UI minimalista y elegante construida con React, Tailwind CSS y Framer Motion.
-- **Base de Datos Vectorial**: Utiliza ChromaDB para indexar y recuperar información relevante rápidamente.
+- **Base de Datos Vectorial**: Soporte para **Pinecone** (recomendado para producción) y **FAISS** (local) para indexar y recuperar información relevante.
 
 ## Estructura del Proyecto
 
@@ -50,5 +50,9 @@ Una herramienta potente y estética para convertir cualquier sitio web en una ba
 ## Notas Técnicas
 
 - El proyecto utiliza **LangChain** para orquestar la lógica de RAG.
-- Para **Claude**, se requiere una API Key de OpenAI para generar los embeddings del texto, ya que Anthropic no proporciona un modelo de embeddings directo en esta implementación.
-- Los datos se almacenan temporalmente en `webdata.db` (SQLite) y en la carpeta `vectordb/`.
+- Se requiere un archivo `.env` en la raíz del backend con:
+  - `PINECONE_API_KEY`: Tu clave de Pinecone para persistencia en la nube.
+  - `PINECONE_INDEX_NAME`: El nombre de tu índice (opcional, por defecto `web-rag`).
+- Si no se define una clave de Pinecone, la aplicación utiliza **FAISS** localmente.
+- Los datos scrapeados se almacenan en `webdata.db` (SQLite).
+- Para **Claude**, se requiere una API Key de OpenAI para generar los embeddings.
