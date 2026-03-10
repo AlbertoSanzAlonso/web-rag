@@ -105,3 +105,62 @@ def delete_vectordb():
     if os.path.exists(FAISS_INDEX_PATH):
         shutil.rmtree(FAISS_INDEX_PATH)
         print(f"🗑️ Índice FAISS local eliminado.")
+
+def get_projections(embedding):
+    """
+    Obtiene los vectores y calcula proyecciones 2D para visualización.
+    Usa un PCA simplificado con Numpy para no cargar scikit-learn (ahorro de RAM).
+    """
+    import numpy as np
+    
+    # Por ahora implementado para FAISS principalmente
+    if not os.path.exists(FAISS_INDEX_PATH):
+        return []
+
+    try:
+        from langchain_community.vectorstores import FAISS
+        vectordb = FAISS.load_local(FAISS_INDEX_PATH, embedding, allow_dangerous_deserialization=True)
+        
+        # Extraer vectores reales de FAISS
+        index = vectordb.index
+        n = index.ntotal
+        if n == 0: return []
+        
+        vectors = np.array([index.reconstruct(i) for i in range(n)])
+        metadatas = [vectordb.docstore.search(vectordb.index_to_docstore_id[i]).metadata for i in range(n)]
+        contents = [vectordb.docstore.search(vectordb.index_to_docstore_id[i]).page_content for i in range(n)]
+
+        # PCA simple con Numpy
+        # 1. Normalizar
+        X = vectors - np.mean(vectors, axis=0)
+        # 2. Matriz de covarianza
+        cov = np.cov(X.T)
+        # 3. Autovalores y autovectores
+        evals, evecs = np.linalg.eigh(cov)
+        # 4. Proyectar a las 2 dimensiones top
+        idx = np.argsort(evals)[::-1]
+        evecs = evecs[:, idx]
+        X_2d = np.dot(X, evecs[:, :2])
+
+        # Normalizar a rango -100 a 100 para el frontend
+        x_min, x_max = X_2d[:, 0].min(), X_2d[:, 0].max()
+        y_min, y_max = X_2d[:, 1].min(), X_2d[:, 1].max()
+        
+        def scale(val, vmin, vmax):
+            if vmax == vmin: return 0
+            return ((val - vmin) / (vmax - vmin)) * 200 - 100
+
+        points = []
+        for i in range(n):
+            points.append({
+                "id": i,
+                "x": float(scale(X_2d[i, 0], x_min, x_max)),
+                "y": float(scale(X_2d[i, 1], y_min, y_max)),
+                "title": metadatas[i].get("title", "Documento"),
+                "snippet": contents[i][:100] + "..."
+            })
+        
+        return points
+    except Exception as e:
+        print(f"⚠️ Error calculando proyecciones: {e}")
+        return []

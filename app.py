@@ -208,6 +208,22 @@ def status():
         "error": app_state["error"],
     }
 
+@app.get("/api/visualize")
+def visualize():
+    """Devuelve las proyecciones 2D de los vectores para el mapa de conocimiento."""
+    from modules.vector.vector_store import get_projections
+    from modules.rag.rag import create_embeddings
+    
+    provider = app_state["config"].get("provider", "openai")
+    api_key = app_state["config"].get("api_key", os.getenv("OPENAI_API_KEY", ""))
+    embedding_key = app_state["config"].get("embedding_key")
+
+    embed_key = embedding_key if provider == "claude" else api_key
+    embedding = create_embeddings(provider, embed_key)
+    
+    points = get_projections(embedding)
+    return {"points": points}
+
 
 @app.post("/api/ask")
 def ask(request: AskRequest):

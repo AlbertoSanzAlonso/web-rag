@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Send, ChevronLeft, Sparkles, Loader2, Languages } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '../App';
+import VectorSpace from '../components/VectorSpace';
 
 const API_URL = (import.meta.env.VITE_API_URL ?? 'https://web-rag-glxd.onrender.com') + '/api';
 
@@ -171,6 +172,17 @@ export default function ChatPage() {
             {/* Messages Area */}
             <div className="flex-1 overflow-y-auto px-4 py-8 scroll-smooth z-10 w-full max-w-3xl mx-auto">
                 <div className="space-y-6">
+                    {/* Show Vector Space Visualization */}
+                    {messages.length > 0 && (
+                        <motion.div
+                            initial={{ opacity: 0, y: -20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="mb-8"
+                        >
+                            <VectorSpace api_url={API_URL.replace('/api', '')} queryInProgress={isLoading} />
+                        </motion.div>
+                    )}
+
                     {/* Show Source Context Initially */}
                     {messages.length > 0 && (
                         <div className="flex justify-center mb-8">
