@@ -7,7 +7,7 @@ import os
 
 
 async def refresh_data_async(base_url, db_path, embedding, api_key, provider="openai",
-                              embedding_key=None, max_pages=50, on_progress=None, ollama_url=None):
+                              embedding_key=None, max_pages=15, on_progress=None, ollama_url=None):
     """
     Versión asíncrona de refresh_data.
     Orden de prioridad:
@@ -45,6 +45,12 @@ async def refresh_data_async(base_url, db_path, embedding, api_key, provider="op
 
     print(f"📄 Chunks generados: {len(documents)}")
     vectordb, retriever = build_vectordb(documents, embedding)
+    
+    # Liberar memoria después de construir el vector store
+    del documents
+    import gc
+    gc.collect()
+    
     print("🔹 Vector store creado y persistido.")
 
     qa = create_qa_chain(retriever, provider, api_key, embedding_key, base_url=ollama_url)
@@ -55,7 +61,7 @@ async def refresh_data_async(base_url, db_path, embedding, api_key, provider="op
 
 # Wrapper síncrono (mantiene compatibilidad si se llama desde código no-async)
 def refresh_data(base_url, db_path, embedding, api_key, provider="openai",
-                 embedding_key=None, max_pages=50, delay=0.5):
+                 embedding_key=None, max_pages=15, delay=0.5):
     return asyncio.run(refresh_data_async(
         base_url, db_path, embedding, api_key, provider, embedding_key, max_pages
     ))
