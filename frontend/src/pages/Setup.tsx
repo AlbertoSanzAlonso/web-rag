@@ -77,30 +77,30 @@ export default function SetupPage() {
                         {/* Main Search Bar (Vision Style) */}
                         <div className="relative group">
                             <div className="absolute -inset-1 bg-gradient-to-r from-vision-cyan to-vision-purple rounded-[2rem] blur opacity-25 group-focus-within:opacity-50 transition duration-1000 group-focus-within:duration-200"></div>
-                            <div className="relative flex items-center bg-slate-900/80 border border-white/10 rounded-[2rem] p-2 pr-4 backdrop-blur-xl">
-                                <div className="pl-6 text-vision-cyan">
-                                    <Globe size={24} />
+                            <div className="relative flex items-center bg-slate-900/80 border border-white/10 rounded-[2rem] p-1.5 sm:p-2 pr-3 sm:pr-4 backdrop-blur-xl">
+                                <div className="pl-4 sm:pl-6 text-vision-cyan">
+                                    <Globe size={22} className="sm:w-6 sm:h-6" />
                                 </div>
                                 <input
                                     type="url"
                                     required
                                     value={targetUrl}
                                     onChange={(e) => setTargetUrl(e.target.value)}
-                                    placeholder="Enter Website URL to Analyze..."
-                                    className="flex-1 bg-transparent border-none text-white text-xl px-4 py-4 focus:ring-0 placeholder:text-slate-600 font-medium"
+                                    placeholder="Enter Website URL..."
+                                    className="flex-1 bg-transparent border-none text-white text-base sm:text-xl px-3 sm:px-4 py-3 sm:py-4 focus:ring-0 placeholder:text-slate-600 font-medium w-full"
                                 />
                                 <button
                                     type="submit"
                                     disabled={isLoading}
-                                    className="w-14 h-14 bg-vision-cyan rounded-full flex items-center justify-center text-background shadow-neon-cyan hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:animate-pulse"
+                                    className="w-12 h-12 sm:w-14 sm:h-14 bg-vision-cyan rounded-full flex items-center justify-center text-background shadow-neon-cyan hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:animate-pulse"
                                 >
-                                    {isLoading ? <Loader2 className="animate-spin" /> : <Search size={24} />}
+                                    {isLoading ? <Loader2 className="animate-spin" /> : <Search size={22} className="sm:w-6 sm:h-6" />}
                                 </button>
                             </div>
                         </div>
 
                         {/* Secondary Configuration (Glass panels) */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 text-left">
                             {/* Provider Card */}
                             <div className="glass-vision p-6 rounded-3xl space-y-4">
                                 <div className="flex items-center gap-2 text-vision-purple">
@@ -113,7 +113,7 @@ export default function SetupPage() {
                                             key={p}
                                             type="button"
                                             onClick={() => setProvider(p)}
-                                            className={`py-2 px-3 rounded-xl text-xs font-bold transition-all capitalize border ${provider === p
+                                            className={`py-1.5 sm:py-2 px-2 sm:px-3 rounded-xl text-[10px] sm:text-xs font-bold transition-all capitalize border ${provider === p
                                                 ? 'bg-vision-purple border-vision-purple text-white shadow-neon-purple'
                                                 : 'bg-white/5 border-white/5 text-secondary hover:border-white/20'
                                                 }`}

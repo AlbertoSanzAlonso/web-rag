@@ -103,8 +103,10 @@ export default function ChatPage() {
                 {/* Header Info */}
                 <div className="flex justify-between items-center bg-vision-cyan/10 border border-vision-cyan/20 px-6 py-3 rounded-2xl backdrop-blur-md">
                     <div className="flex items-center gap-3">
-                        <div className="w-2 h-2 rounded-full bg-vision-cyan animate-pulse shadow-neon-cyan" />
-                        <span className="text-[10px] font-black tracking-widest text-vision-cyan uppercase">Live Analysis Context</span>
+                        <div className="w-5 h-5 bg-vision-cyan/20 rounded border border-vision-cyan/40 flex items-center justify-center overflow-hidden">
+                            <img src="/favicon.png" alt="Logo" className="w-4 h-4 object-contain" />
+                        </div>
+                        <span className="text-[10px] sm:text-xs font-black tracking-widest text-vision-cyan uppercase">WEB SEMANTIC CONSTELLATION ACTIVE</span>
                     </div>
                     <span className="text-xs font-bold text-white/60 font-mono">{new URL(sourceUrl || 'https://example.com').hostname}</span>
                 </div>

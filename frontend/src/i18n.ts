@@ -4,7 +4,7 @@ export type Language = 'en' | 'es';
 export const translations = {
     en: {
         setup: {
-            title: "Start Knowledge Agent",
+            title: "WEB SEMANTIC CONSTELLATION",
             subtitle: "Configure your LLM provider and target website.",
             targetWebsite: "Target Website",
             placeholderUrl: "https://example.com",
@@ -39,7 +39,7 @@ export const translations = {
     },
     es: {
         setup: {
-            title: "Iniciar Agente de Conocimiento",
+            title: "WEB SEMANTIC CONSTELLATION",
             subtitle: "Configura tu proveedor de LLM y el sitio web objetivo.",
             targetWebsite: "Sitio Web Objetivo",
             placeholderUrl: "https://ejemplo.com",
