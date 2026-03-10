@@ -4,21 +4,30 @@ from langchain_anthropic import ChatAnthropic
 from langchain_classic.chains import ConversationalRetrievalChain
 from langchain_classic.memory import ConversationBufferMemory
 
+_EMBEDDING_CACHE = {}
+
 def create_embeddings(provider: str, api_key: str, base_url: str = None):
+    cache_key = (provider, api_key, base_url)
+    if cache_key in _EMBEDDING_CACHE:
+        return _EMBEDDING_CACHE[cache_key]
+
     if provider == "openai":
-        return OpenAIEmbeddings(openai_api_key=api_key)
+        embed = OpenAIEmbeddings(openai_api_key=api_key)
     elif provider == "gemini":
-        return GoogleGenerativeAIEmbeddings(model="models/embedding-001", google_api_key=api_key)
+        embed = GoogleGenerativeAIEmbeddings(model="models/embedding-001", google_api_key=api_key)
     elif provider == "claude":
-        return OpenAIEmbeddings(openai_api_key=api_key)
+        embed = OpenAIEmbeddings(openai_api_key=api_key)
     elif provider == "groq":
         # FastEmbed is much lighter and faster than HuggingFace/Torch for Render Free Tier
         from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
-        return FastEmbedEmbeddings(
+        embed = FastEmbedEmbeddings(
             model_name="BAAI/bge-small-en-v1.5" # Very lightweight and high performance
         )
     else:
         raise ValueError(f"Provider {provider} not supported for embeddings")
+        
+    _EMBEDDING_CACHE[cache_key] = embed
+    return embed
 
 def create_llm(provider: str, api_key: str, base_url: str = None):
     if provider == "openai":

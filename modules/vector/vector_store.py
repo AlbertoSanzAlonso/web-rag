@@ -84,6 +84,11 @@ def build_vectordb(documents, embedding):
                     "snippet": texts[i][:100] + "..."
                 })
             
+            # Limpiar memoria pesada
+            del vectors, X, X_2d
+            import gc
+            gc.collect()
+
             with open("projections.json", "w") as f:
                 json.dump(points, f)
             print("✨ Mapa de visualización generado.")
