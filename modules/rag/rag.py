@@ -47,6 +47,24 @@ def create_llm(provider: str, api_key: str, base_url: str = None):
     else:
         raise ValueError(f"Provider {provider} not supported")
 
+from langchain.prompts import PromptTemplate
+
+QA_PROMPT = PromptTemplate.from_template("""
+Eres un Asistente Experto en Análisis de Sitios Web. Tu objetivo es responder preguntas basadas UNICAMENTE en el contexto proporcionado.
+
+REGLAS CRITICAS:
+1. Si la respuesta NO está en el contexto, di: "Lo siento, esa información no aparece en la página que he analizado."
+2. No uses tu conocimiento general para inventar datos que no están en el texto.
+3. Si te preguntan por la "dirección", busca datos postales, de contacto o ubicación en el contexto.
+4. Mantén un tono profesional y directo.
+
+CONTEXTO:
+{context}
+
+PREGUNTA: {question}
+
+RESPUESTA (en español):""")
+
 def create_qa_chain(retriever, provider: str, api_key: str, embedding_key: str = None, base_url: str = None):
     llm = create_llm(provider, api_key, base_url=base_url)
 
@@ -60,7 +78,8 @@ def create_qa_chain(retriever, provider: str, api_key: str, embedding_key: str =
         llm=llm,
         retriever=retriever,
         memory=memory,
-        return_source_documents=False,
+        return_source_documents=True,
+        combine_docs_chain_kwargs={"prompt": QA_PROMPT},
         verbose=False,
     )
     return chain

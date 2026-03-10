@@ -52,13 +52,27 @@ def build_vectordb(documents, embedding):
         import numpy as np
         import json
         
-        # Obtener vectores (desde los documentos para que funcione con Pinecone también)
+        print(f"🧠 Generando embeddings para {len(documents)} fragmentos...")
+        
+        # Procesar por lotes (batching) para no saturar RAM
+        all_embeddings = []
+        batch_size = 5
+        for i in range(0, len(documents), batch_size):
+            batch = documents[i:i+batch_size]
+            texts = [doc.page_content for doc in batch]
+            batch_vectors = embedding.embed_documents(texts)
+            all_embeddings.extend(batch_vectors)
+            print(f"  ↳ Procesados {min(i+batch_size, len(documents))}/{len(documents)}...")
+            
+            import gc
+            gc.collect()
+
+        vectors = np.array(all_embeddings)
         texts = [doc.page_content for doc in documents]
         metadatas = [doc.metadata for doc in documents]
-        vectors = np.array(embedding.embed_documents(texts))
 
         if len(vectors) > 1:
-            # PCA simple con Numpy
+            print("🎨 Calculando proyecciones 2D (PCA)...")
             X = vectors - np.mean(vectors, axis=0)
             cov = np.cov(X.T)
             evals, evecs = np.linalg.eigh(cov)
@@ -85,13 +99,13 @@ def build_vectordb(documents, embedding):
                 })
             
             # Limpiar memoria pesada
-            del vectors, X, X_2d
+            del vectors, X, X_2d, all_embeddings
             import gc
             gc.collect()
 
             with open("projections.json", "w") as f:
                 json.dump(points, f)
-            print("✨ Mapa de visualización generado.")
+            print("✨ Mapa de visualización y proyecciones guardados.")
     except Exception as e:
         print(f"⚠️ No se pudo generar el visualizador: {e}")
     
