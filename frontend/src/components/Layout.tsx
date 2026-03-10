@@ -9,12 +9,12 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             {/* Top Navigation */}
             <header className="w-full flex justify-between items-center px-8 py-6 max-w-7xl mx-auto z-50">
                 <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-vision-cyan rounded-lg flex items-center justify-center shadow-neon-cyan">
-                        <span className="text-background font-black text-xl italic">V</span>
+                    <div className="w-8 h-8 bg-vision-cyan rounded-lg flex items-center justify-center shadow-neon-cyan overflow-hidden">
+                        <img src="/favicon.png" alt="Logo" className="w-6 h-6 object-contain" />
                     </div>
                     <div className="flex flex-col -gap-1">
-                        <span className="text-xs font-black tracking-[0.2em] text-white">VISIONARY</span>
-                        <span className="text-[10px] font-medium tracking-[0.3em] text-vision-cyan/80">INTELLIGENCE</span>
+                        <span className="text-xs font-black tracking-[0.2em] text-white">WEB SEMANTIC</span>
+                        <span className="text-[10px] font-medium tracking-[0.3em] text-vision-cyan/80">CONSTELLATION</span>
                     </div>
                 </div>
 
