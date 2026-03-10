@@ -18,8 +18,8 @@ Maintain stability on Render's 512MB RAM limit and avoid Port Scan Timeouts.
 
 ### 1. Lazy Imports (Crucial)
 Never import heavy libraries at the module's top-level in `app.py`.
-- **Wrong**: `from langchain_openai import ChatOpenAI` (at top)
 - **Correct**: `from langchain_openai import ChatOpenAI` (inside `create_llm`)
+- **Singleton Pattern**: Cache heavy models (embeddings/LLMs) in a global dictionary once loaded. Re-instantiating models is the #1 cause of OOM crashes on Render.
 
 ### 2. Startup Tasks (Avoid Health-Check Timeouts)
 Render starts scanning for a listening port as soon as the container starts.
@@ -32,8 +32,9 @@ Render starts scanning for a listening port as soon as the container starts.
 - **Explicit Cleanup**: After heavy vectorization or scraping, use `import gc; gc.collect()` to free up RAM immediately.
 
 ### 4. Low-RAM Indexing (Crucial for 512MB)
-- **Cap Scraping**: Set `max_pages` to a small value (e.g., **15 pages**) by default. Free tier RAM cannot handle processing the source text of 50+ pages simultaneously.
-- **Avoid Heavy Scikit-Learn**: For visualizations, use direct NumPy math for PCA instead of importing `scikit-learn` to save ~80MB of RAM.
+- **Batch Processing**: Always process document embeddings in batches (e.g., 5 at a time) to keep the memory peak low.
+- **Avoid Heavy Libraries**: Use direct NumPy math for PCA instead of importing `scikit-learn` to save ~80MB of RAM.
+- **Cap Scraping**: Set `max_pages` to a small value (max 15) by default.
 
 ### 5. Health Checks
 - Ensure `/api/status` returns `200 OK` even if the loading `asyncio.create_task` is still running in the background.

@@ -1,8 +1,9 @@
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
-import { ArrowRight, Command, Globe, Key, Loader2, Cpu, Languages } from 'lucide-react';
+import { Search, Globe, Key, Loader2, Cpu } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '../App';
+import Layout from '../components/Layout';
 
 const API_URL = (import.meta.env.VITE_API_URL ?? 'https://web-rag-glxd.onrender.com') + '/api';
 
@@ -10,18 +11,14 @@ type Provider = 'openai' | 'gemini' | 'claude' | 'groq';
 
 export default function SetupPage() {
     const navigate = useNavigate();
-    const { t, language, setLanguage } = useLanguage();
+    const { t } = useLanguage();
     const [apiKey, setApiKey] = useState('');
-    const [embeddingKey, setEmbeddingKey] = useState(''); // Only for Claude
+    const [embeddingKey, setEmbeddingKey] = useState('');
     const [targetUrl, setTargetUrl] = useState('');
     const [provider, setProvider] = useState<Provider>('openai');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
     const [statusMsg, setStatusMsg] = useState('');
-
-    const toggleLanguage = () => {
-        setLanguage(language === 'en' ? 'es' : 'en');
-    };
 
     const handleConfigure = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -36,7 +33,6 @@ export default function SetupPage() {
                 embedding_key: provider === 'claude' ? embeddingKey : undefined,
             };
 
-            // 1. Lanzar la indexación (responde inmediatamente)
             const res = await fetch(`${API_URL}/configure`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -48,15 +44,12 @@ export default function SetupPage() {
                 throw new Error(err.detail || 'Configuration failed');
             }
 
-            // 2. Polling hasta que el agente esté listo
             let ready = false;
             while (!ready) {
                 await new Promise(r => setTimeout(r, 1200));
                 const statusRes = await fetch(`${API_URL}/status`);
                 const statusData = await statusRes.json();
-
                 if (statusData.error) throw new Error(statusData.error);
-
                 if (statusData.configured && !statusData.indexing) {
                     ready = true;
                 } else if (statusData.indexing) {
@@ -64,7 +57,6 @@ export default function SetupPage() {
                     setStatusMsg(pages > 0 ? t('setup.indexingPages').replace('{pages}', pages.toString()) : t('setup.indexing'));
                 }
             }
-
             navigate('/chat');
         } catch (err: any) {
             setError(err.message);
@@ -74,191 +66,116 @@ export default function SetupPage() {
     };
 
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden bg-[#09090b]">
-            {/* Language Toggle */}
-            <div className="absolute top-6 right-6 z-20">
-                <button
-                    onClick={toggleLanguage}
-                    className="flex items-center gap-2 px-4 py-2 bg-[#18181b] border border-white/5 rounded-xl text-zinc-400 hover:text-white transition-all text-sm font-medium"
+        <Layout>
+            <div className="flex flex-col items-center justify-center pt-20">
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="w-full max-w-2xl text-center"
                 >
-                    <Languages className="h-4 w-4" />
-                    <span>{language === 'en' ? 'English' : 'Español'}</span>
-                </button>
-            </div>
-
-            {/* Background Gradients */}
-            <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
-                <div className="absolute top-[-20%] right-[20%] w-[60%] h-[60%] rounded-full bg-indigo-500/5 blur-[120px]" />
-                <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-emerald-500/5 blur-[120px]" />
-            </div>
-
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, ease: "easeOut" }}
-                className="w-full max-w-lg z-10"
-            >
-                <div className="glass-card rounded-3xl p-8 md:p-10 shadow-2xl relative border border-white/5">
-
-                    {/* Header */}
-                    <div className="mb-8 text-center">
-                        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[#18181b] border border-white/5 mb-4 shadow-sm">
-                            <Command className="h-6 w-6 text-white" />
-                        </div>
-                        <h1 className="text-2xl font-bold tracking-tight text-white mb-2">
-                            {t('setup.title')}
-                        </h1>
-                        <p className="text-zinc-500 text-sm">
-                            {t('setup.subtitle')}
-                        </p>
-                    </div>
-
-                    {/* Form */}
-                    <form onSubmit={handleConfigure} className="space-y-5">
-
-                        {/* Provider Selector */}
-                        <div className="grid grid-cols-4 gap-2 bg-[#18181b] p-1 rounded-xl border border-zinc-800">
-                            {(['openai', 'gemini', 'claude', 'groq'] as Provider[]).map((p) => (
-                                <button
-                                    key={p}
-                                    type="button"
-                                    onClick={() => setProvider(p)}
-                                    className={`py-2 px-3 rounded-lg text-sm font-medium transition-all capitalize ${provider === p
-                                        ? 'bg-white text-black shadow-sm'
-                                        : 'text-zinc-400 hover:text-white hover:bg-white/5'
-                                        }`}
-                                >
-                                    {p}
-                                </button>
-                            ))}
-                        </div>
-
-                        {/* URL Input */}
-                        <div>
-                            <label className="block text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1.5 pl-1">{t('setup.targetWebsite')}</label>
-                            <div className="relative group">
-                                <Globe className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 group-focus-within:text-white transition-colors" />
+                    <form onSubmit={handleConfigure} className="space-y-12">
+                        {/* Main Search Bar (Vision Style) */}
+                        <div className="relative group">
+                            <div className="absolute -inset-1 bg-gradient-to-r from-vision-cyan to-vision-purple rounded-[2rem] blur opacity-25 group-focus-within:opacity-50 transition duration-1000 group-focus-within:duration-200"></div>
+                            <div className="relative flex items-center bg-slate-900/80 border border-white/10 rounded-[2rem] p-2 pr-4 backdrop-blur-xl">
+                                <div className="pl-6 text-vision-cyan">
+                                    <Globe size={24} />
+                                </div>
                                 <input
                                     type="url"
                                     required
                                     value={targetUrl}
                                     onChange={(e) => setTargetUrl(e.target.value)}
-                                    onBlur={() => {
-                                        if (targetUrl && !/^https?:\/\//i.test(targetUrl)) {
-                                            setTargetUrl(`https://${targetUrl}`);
-                                        }
-                                    }}
-                                    placeholder={t('setup.placeholderUrl')}
-                                    className="w-full h-11 bg-[#18181b] border border-zinc-800 text-white text-sm rounded-xl pl-10 pr-4 placeholder:text-zinc-600 focus:bg-[#202024] input-ring"
+                                    placeholder="Enter Website URL to Analyze..."
+                                    className="flex-1 bg-transparent border-none text-white text-xl px-4 py-4 focus:ring-0 placeholder:text-slate-600 font-medium"
                                 />
+                                <button
+                                    type="submit"
+                                    disabled={isLoading}
+                                    className="w-14 h-14 bg-vision-cyan rounded-full flex items-center justify-center text-background shadow-neon-cyan hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:animate-pulse"
+                                >
+                                    {isLoading ? <Loader2 className="animate-spin" /> : <Search size={24} />}
+                                </button>
                             </div>
                         </div>
 
+                        {/* Secondary Configuration (Glass panels) */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
+                            {/* Provider Card */}
+                            <div className="glass-vision p-6 rounded-3xl space-y-4">
+                                <div className="flex items-center gap-2 text-vision-purple">
+                                    <Cpu size={18} />
+                                    <h3 className="text-xs font-black tracking-widest uppercase">Provider Engine</h3>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2">
+                                    {(['openai', 'gemini', 'claude', 'groq'] as Provider[]).map((p) => (
+                                        <button
+                                            key={p}
+                                            type="button"
+                                            onClick={() => setProvider(p)}
+                                            className={`py-2 px-3 rounded-xl text-xs font-bold transition-all capitalize border ${provider === p
+                                                ? 'bg-vision-purple border-vision-purple text-white shadow-neon-purple'
+                                                : 'bg-white/5 border-white/5 text-secondary hover:border-white/20'
+                                                }`}
+                                        >
+                                            {p}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
 
-                        {/* API Key Input */}
-                        <AnimatePresence mode="wait">
-                            {provider !== 'groq' ? (
-                                <motion.div
-                                    key="api-key-input"
-                                    initial={{ opacity: 0, height: 0 }}
-                                    animate={{ opacity: 1, height: 'auto' }}
-                                    exit={{ opacity: 0, height: 0 }}
-                                    className="overflow-hidden"
-                                >
-                                    <label className="block text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1.5 pl-1">
-                                        {provider === 'openai' ? t('setup.openaiKey') :
-                                            provider === 'gemini' ? t('setup.geminiKey') :
-                                                t('setup.claudeKey')}
-                                    </label>
-                                    <div className="relative group">
-                                        <Key className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 group-focus-within:text-white transition-colors" />
+                            {/* Credentials Card */}
+                            <div className="glass-vision p-6 rounded-3xl space-y-4">
+                                <div className="flex items-center gap-2 text-vision-blue">
+                                    <Key size={18} />
+                                    <h3 className="text-xs font-black tracking-widest uppercase">Encryption Key</h3>
+                                </div>
+                                <div className="space-y-3">
+                                    {provider !== 'groq' ? (
                                         <input
                                             type="password"
                                             required
                                             value={apiKey}
                                             onChange={(e) => setApiKey(e.target.value)}
                                             placeholder={provider === 'gemini' ? 'AIza...' : 'sk-...'}
-                                            className="w-full h-11 bg-[#18181b] border border-zinc-800 text-white text-sm rounded-xl pl-10 pr-4 placeholder:text-zinc-600 focus:bg-[#202024] input-ring"
+                                            className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-2.5 text-sm text-white focus:border-vision-blue/50 transition-all outline-none"
                                         />
-                                    </div>
-
-                                    {provider === 'claude' && (
-                                        <div className="mt-4">
-                                            <label className="block text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1.5 pl-1">
-                                                {t('setup.embeddingKey')} <span className="text-[10px] text-zinc-600 normal-case">({t('setup.embeddingHint')})</span>
-                                            </label>
-                                            <div className="relative group">
-                                                <Cpu className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 group-focus-within:text-white transition-colors" />
-                                                <input
-                                                    type="password"
-                                                    required
-                                                    value={embeddingKey}
-                                                    onChange={(e) => setEmbeddingKey(e.target.value)}
-                                                    placeholder="sk-..."
-                                                    className="w-full h-11 bg-[#18181b] border border-zinc-800 text-white text-sm rounded-xl pl-10 pr-4 placeholder:text-zinc-600 focus:bg-[#202024] input-ring"
-                                                />
-                                            </div>
-                                            <p className="text-[10px] text-zinc-500 mt-1 pl-1">
-                                                {t('setup.claudeHint')}
-                                            </p>
+                                    ) : (
+                                        <div className="py-2.5 px-4 bg-vision-cyan/5 border border-vision-cyan/10 rounded-xl text-[10px] text-cyan-200/60 italic text-center">
+                                            Groq optimization active. No key required.
                                         </div>
                                     )}
-                                </motion.div>
-                            ) : (
+
+                                    {provider === 'claude' && (
+                                        <input
+                                            type="password"
+                                            required
+                                            value={embeddingKey}
+                                            onChange={(e) => setEmbeddingKey(e.target.value)}
+                                            placeholder="Embedding Key (OpenAI)"
+                                            className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-2.5 text-sm text-white focus:border-vision-blue/50 transition-all outline-none"
+                                        />
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Status / Error */}
+                        <AnimatePresence>
+                            {(error || statusMsg) && (
                                 <motion.div
-                                    key="groq-info"
-                                    initial={{ opacity: 0, height: 0 }}
-                                    animate={{ opacity: 1, height: 'auto' }}
-                                    exit={{ opacity: 0, height: 0 }}
-                                    className="p-4 bg-indigo-500/5 border border-indigo-500/10 rounded-xl space-y-2 overflow-hidden"
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.9 }}
+                                    className={`p-4 rounded-2xl border text-sm font-medium ${error ? 'bg-red-500/10 border-red-500/20 text-red-400' : 'bg-vision-cyan/10 border-vision-cyan/20 text-vision-cyan'}`}
                                 >
-                                    <p className="text-xs text-zinc-400 leading-relaxed text-center">
-                                        🚀 <span className="text-white font-medium">Groq</span> {t('setup.groqFree')}
-                                    </p>
-                                    <p className="text-[10px] text-zinc-500 text-center italic">
-                                        {t('setup.groqHint')}
-                                    </p>
+                                    {error || statusMsg}
                                 </motion.div>
                             )}
                         </AnimatePresence>
-
-                        {error && (
-                            <motion.div
-                                initial={{ opacity: 0, y: -5 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-xs flex items-center gap-2"
-                            >
-                                <div className="w-1 h-1 rounded-full bg-red-400" />
-                                {error}
-                            </motion.div>
-                        )}
-
-                        <button
-                            type="submit"
-                            disabled={isLoading}
-                            className="w-full bg-white text-black font-semibold h-11 rounded-xl hover:bg-zinc-200 active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-lg shadow-white/5 mt-2"
-                        >
-                            {isLoading ? (
-                                <>
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                    <span>{statusMsg || t('setup.connecting')}</span>
-                                </>
-                            ) : (
-                                <>
-                                    <span>{t('setup.initialize')}</span>
-                                    <ArrowRight className="h-4 w-4" />
-                                </>
-                            )}
-                        </button>
                     </form>
-                </div>
-
-                <div className="text-center mt-8">
-                    <p className="text-[10px] text-zinc-600 uppercase tracking-widest font-medium">
-                        {t('setup.powered')}
-                    </p>
-                </div>
-            </motion.div >
-        </div >
+                </motion.div>
+            </div>
+        </Layout>
     );
 }

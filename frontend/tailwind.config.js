@@ -10,11 +10,20 @@ export default {
                 sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif'],
             },
             colors: {
-                background: "#09090b",
-                surface: "#18181b",
-                primary: "#fafafa",
-                secondary: "#a1a1aa",
-                accent: "#6366f1", // Indigo accent for some vibrant touches
+                background: "#020617",
+                surface: "#0f172a",
+                primary: "#f8fafc",
+                secondary: "#94a3b8",
+                vision: {
+                    cyan: "#22d3ee",
+                    purple: "#c084fc",
+                    blue: "#38bdf8",
+                    dark: "#030014",
+                }
+            },
+            boxShadow: {
+                'neon-cyan': '0 0 15px rgba(34, 211, 238, 0.4)',
+                'neon-purple': '0 0 15px rgba(192, 132, 252, 0.4)',
             }
         },
     },

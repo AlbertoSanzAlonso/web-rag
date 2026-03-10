@@ -5,19 +5,29 @@
 
 @layer base {
   body {
-    @apply bg-background text-primary antialiased;
+    @apply text-primary antialiased min-h-screen;
+    background: radial-gradient(circle at center, #0f172a 0%, #020617 100%);
+    background-attachment: fixed;
   }
 }
 
-/* Custom utilities */
-.glass-card {
-  background: rgba(24, 24, 27, 0.4);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+@layer components {
+  .glass-vision {
+    @apply bg-slate-900/40 backdrop-blur-xl border border-white/10 shadow-2xl;
+  }
+
+  .neon-border-cyan {
+    @apply border-vision-cyan/50 shadow-neon-cyan;
+  }
+
+  .neon-border-purple {
+    @apply border-vision-purple/50 shadow-neon-purple;
+  }
 }
 
-.input-ring {
-  @apply transition-all duration-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:outline-none;
+.glass-card {
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }

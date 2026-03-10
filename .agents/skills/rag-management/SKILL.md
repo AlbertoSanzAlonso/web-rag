@@ -30,11 +30,14 @@ To add a new provider (e.g., Mistral):
 -   **Groq/Local**: Use **`FastEmbedEmbeddings`** (`BAAI/bge-small-en-v1.5`). Never use `HuggingFaceEmbeddings` (Torch) to save RAM.
 
 ### 3. Vector Space Visualization
-- **`modules/vector/vector_store.py:get_projections`**: Uses a lightweight NumPy-based PCA to reduce embeddings from 384/1536 dims to 2D.
-- **`app.py:/api/visualize`**: Serves these points to the frontend.
-- **`VectorSpace.tsx`**: Renders the "Knowledge Nebula" galaxy.
+- **`modules/vector/vector_store.py:get_projections`**: Reads pre-calculated proyections from `projections.json`.
+- **Pre-calculation**: Projections are calculated during `build_vectordb` using a NumPy-based PCA in small batches.
 
 ### 4. Pinecone vs FAISS
 - **FAISS**: Default for local dev or if `PINECONE_API_KEY` is missing. Stores in `./faiss_index`.
 - **Pinecone**: Automatic if API key present. Creates/deletes indices dynamically.
-- **Index Names**: Configured via `PINECONE_INDEX_NAME` (default "web-rag").
+
+### 5. Advanced RAG Patterns
+- **Singleton Embeddings**: Models are cached in `_EMBEDDING_CACHE` to avoid reloading them and causing OOM.
+- **Strict QA Prompting**: Uses `QA_PROMPT` to prevent LLM hallucinations by forcing context use.
+- **Streaming**: Set `streaming=True` in all LLM constructors and use `AsyncIteratorCallbackHandler` for SSE.
