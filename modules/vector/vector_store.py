@@ -46,6 +46,49 @@ def build_vectordb(documents, embedding):
         vectordb = FAISS.from_documents(documents, embedding=embedding)
         vectordb.save_local(FAISS_INDEX_PATH)
         print(f"💾 Índice FAISS guardado localmente en {FAISS_INDEX_PATH}")
+
+    # --- NUEVO: Calcular y guardar proyecciones para visualización ---
+    try:
+        import numpy as np
+        import json
+        
+        # Obtener vectores (desde los documentos para que funcione con Pinecone también)
+        texts = [doc.page_content for doc in documents]
+        metadatas = [doc.metadata for doc in documents]
+        vectors = np.array(embedding.embed_documents(texts))
+
+        if len(vectors) > 1:
+            # PCA simple con Numpy
+            X = vectors - np.mean(vectors, axis=0)
+            cov = np.cov(X.T)
+            evals, evecs = np.linalg.eigh(cov)
+            idx = np.argsort(evals)[::-1]
+            evecs = evecs[:, idx]
+            X_2d = np.dot(X, evecs[:, :2])
+
+            # Normalizar
+            x_min, x_max = X_2d[:, 0].min(), X_2d[:, 0].max()
+            y_min, y_max = X_2d[:, 1].min(), X_2d[:, 1].max()
+            
+            def scale(val, vmin, vmax):
+                if vmax == vmin: return 0
+                return float(((val - vmin) / (vmax - vmin)) * 200 - 100)
+
+            points = []
+            for i in range(len(vectors)):
+                points.append({
+                    "id": i,
+                    "x": scale(X_2d[i, 0], x_min, x_max),
+                    "y": scale(X_2d[i, 1], y_min, y_max),
+                    "title": metadatas[i].get("title", "Documento"),
+                    "snippet": texts[i][:100] + "..."
+                })
+            
+            with open("projections.json", "w") as f:
+                json.dump(points, f)
+            print("✨ Mapa de visualización generado.")
+    except Exception as e:
+        print(f"⚠️ No se pudo generar el visualizador: {e}")
     
     retriever = vectordb.as_retriever(search_type="similarity", search_kwargs={"k": 4})
     return vectordb, retriever
@@ -105,62 +148,18 @@ def delete_vectordb():
     if os.path.exists(FAISS_INDEX_PATH):
         shutil.rmtree(FAISS_INDEX_PATH)
         print(f"🗑️ Índice FAISS local eliminado.")
+    if os.path.exists("projections.json"):
+        os.remove("projections.json")
 
-def get_projections(embedding):
+def get_projections(embedding=None):
     """
-    Obtiene los vectores y calcula proyecciones 2D para visualización.
-    Usa un PCA simplificado con Numpy para no cargar scikit-learn (ahorro de RAM).
+    Lee las proyecciones desde el archivo JSON guardado durante la indexación.
     """
-    import numpy as np
-    
-    # Por ahora implementado para FAISS principalmente
-    if not os.path.exists(FAISS_INDEX_PATH):
-        return []
-
-    try:
-        from langchain_community.vectorstores import FAISS
-        vectordb = FAISS.load_local(FAISS_INDEX_PATH, embedding, allow_dangerous_deserialization=True)
-        
-        # Extraer vectores reales de FAISS
-        index = vectordb.index
-        n = index.ntotal
-        if n == 0: return []
-        
-        vectors = np.array([index.reconstruct(i) for i in range(n)])
-        metadatas = [vectordb.docstore.search(vectordb.index_to_docstore_id[i]).metadata for i in range(n)]
-        contents = [vectordb.docstore.search(vectordb.index_to_docstore_id[i]).page_content for i in range(n)]
-
-        # PCA simple con Numpy
-        # 1. Normalizar
-        X = vectors - np.mean(vectors, axis=0)
-        # 2. Matriz de covarianza
-        cov = np.cov(X.T)
-        # 3. Autovalores y autovectores
-        evals, evecs = np.linalg.eigh(cov)
-        # 4. Proyectar a las 2 dimensiones top
-        idx = np.argsort(evals)[::-1]
-        evecs = evecs[:, idx]
-        X_2d = np.dot(X, evecs[:, :2])
-
-        # Normalizar a rango -100 a 100 para el frontend
-        x_min, x_max = X_2d[:, 0].min(), X_2d[:, 0].max()
-        y_min, y_max = X_2d[:, 1].min(), X_2d[:, 1].max()
-        
-        def scale(val, vmin, vmax):
-            if vmax == vmin: return 0
-            return ((val - vmin) / (vmax - vmin)) * 200 - 100
-
-        points = []
-        for i in range(n):
-            points.append({
-                "id": i,
-                "x": float(scale(X_2d[i, 0], x_min, x_max)),
-                "y": float(scale(X_2d[i, 1], y_min, y_max)),
-                "title": metadatas[i].get("title", "Documento"),
-                "snippet": contents[i][:100] + "..."
-            })
-        
-        return points
-    except Exception as e:
-        print(f"⚠️ Error calculando proyecciones: {e}")
-        return []
+    import json
+    if os.path.exists("projections.json"):
+        try:
+            with open("projections.json") as f:
+                return json.load(f)
+        except:
+            return []
+    return []

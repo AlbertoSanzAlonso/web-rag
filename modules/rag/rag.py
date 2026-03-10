@@ -22,17 +22,18 @@ def create_embeddings(provider: str, api_key: str, base_url: str = None):
 
 def create_llm(provider: str, api_key: str, base_url: str = None):
     if provider == "openai":
-        return ChatOpenAI(openai_api_key=api_key, temperature=0, model_name="gpt-3.5-turbo")
+        return ChatOpenAI(openai_api_key=api_key, temperature=0, model_name="gpt-3.5-turbo", streaming=True)
     elif provider == "gemini":
-        return ChatGoogleGenerativeAI(google_api_key=api_key, temperature=0, model="gemini-1.5-flash")
+        return ChatGoogleGenerativeAI(google_api_key=api_key, temperature=0, model="gemini-1.5-flash", streaming=True)
     elif provider == "claude":
-        return ChatAnthropic(anthropic_api_key=api_key, temperature=0, model_name="claude-3-opus-20240229")
+        return ChatAnthropic(anthropic_api_key=api_key, temperature=0, model_name="claude-3-opus-20240229", streaming=True)
     elif provider == "groq":
         from langchain_groq import ChatGroq
         return ChatGroq(
             groq_api_key=api_key,
             model_name="llama-3.1-8b-instant",
-            temperature=0
+            temperature=0,
+            streaming=True
         )
     else:
         raise ValueError(f"Provider {provider} not supported")

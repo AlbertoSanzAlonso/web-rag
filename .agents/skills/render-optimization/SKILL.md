@@ -29,11 +29,16 @@ Render starts scanning for a listening port as soon as the container starts.
 -   **`FastEmbed` over `Torch`**: Using `fastembed` (ONNX) is mandatory for local embeddings to avoid 512MB RAM crashes.
 -   **Single Worker**: Always set `uvicorn --workers 1`.
 -   **Minimize `requirements.txt`**: Don't include unused heavy libraries like `transformers`, `torch`, `sentence-transformers` if not absolutely necessary.
+- **Explicit Cleanup**: After heavy vectorization or scraping, use `import gc; gc.collect()` to free up RAM immediately.
 
-### 4. Health Checks
+### 4. Low-RAM Indexing (Crucial for 512MB)
+- **Cap Scraping**: Set `max_pages` to a small value (e.g., **15 pages**) by default. Free tier RAM cannot handle processing the source text of 50+ pages simultaneously.
+- **Avoid Heavy Scikit-Learn**: For visualizations, use direct NumPy math for PCA instead of importing `scikit-learn` to save ~80MB of RAM.
+
+### 5. Health Checks
 - Ensure `/api/status` returns `200 OK` even if the loading `asyncio.create_task` is still running in the background.
 - Render uses this path to verify the service is "Live".
 
-### 5. Frontend & CORS Sync
+### 6. Frontend & CORS Sync
 - **Backend**: Set `allow_origins=["*"]` in `app.py`'s `CORSMiddleware` for production.
 - **Frontend (Vercel)**: Always define `VITE_API_URL` without a trailing slash (e.g., `https://backend.onrender.com`) to match internal path construction.

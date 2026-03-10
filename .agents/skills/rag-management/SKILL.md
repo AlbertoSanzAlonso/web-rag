@@ -12,8 +12,8 @@ Maintain and extend the core RAG logic of the application without breaking resou
 
 ## 🛠️ Components
 - **`modules/rag/rag.py`**: The heart of the system. Contains `create_embeddings`, `create_llm`, and `create_qa_chain`.
-- **`modules/data_manager.py`**: Orchestrates the scraping -> DB -> FAISS flow.
-- **`modules/vector/vector_store.py`**: Manages FAISS index persistence and loading.
+- **`modules/data_manager.py`**: Orchestrates scraping -> DB -> Vector Store. Includes RAM-safe batching.
+- **`modules/vector/vector_store.py`**: Manages FAISS (Local) and Pinecone (Cloud) persistence. Includes 2D projection logic for UI.
 
 ## 🧱 Key Patterns
 
@@ -29,7 +29,12 @@ To add a new provider (e.g., Mistral):
 -   **Claude**: Claude doesn't have embeddings; use `OpenAIEmbeddings` as a proxy (requires API Key).
 -   **Groq/Local**: Use **`FastEmbedEmbeddings`** (`BAAI/bge-small-en-v1.5`). Never use `HuggingFaceEmbeddings` (Torch) to save RAM.
 
-### 3. QA Chain Configuration
--   Uses `ConversationalRetrievalChain.from_llm`.
--   **Memory**: `ConversationBufferMemory` is used for chat history.
--   **Streaming**: Handled via `AsyncIteratorCallbackHandler` for OpenAI/Groq/Claude.
+### 3. Vector Space Visualization
+- **`modules/vector/vector_store.py:get_projections`**: Uses a lightweight NumPy-based PCA to reduce embeddings from 384/1536 dims to 2D.
+- **`app.py:/api/visualize`**: Serves these points to the frontend.
+- **`VectorSpace.tsx`**: Renders the "Knowledge Nebula" galaxy.
+
+### 4. Pinecone vs FAISS
+- **FAISS**: Default for local dev or if `PINECONE_API_KEY` is missing. Stores in `./faiss_index`.
+- **Pinecone**: Automatic if API key present. Creates/deletes indices dynamically.
+- **Index Names**: Configured via `PINECONE_INDEX_NAME` (default "web-rag").
