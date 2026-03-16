@@ -70,8 +70,12 @@ async def restore_state():
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=False,
+    allow_origins=[
+        "http://localhost:5173",
+        "https://web-rag-xi.vercel.app",
+        "https://web-rag.albertosanz.dev"
+    ],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
