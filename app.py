@@ -19,6 +19,7 @@ print(f"DEBUG: Starting app. PORT={os.getenv('PORT')}")
 @app.on_event("startup")
 async def on_startup():
     """Lanzamos la restauración en segundo plano para no bloquear el arranque inicial."""
+    print("DEBUG: CORS Middleware initialized with allowed origins.")
     asyncio.create_task(restore_state())
 
 async def restore_state():
