@@ -47,7 +47,7 @@ def create_llm(provider: str, api_key: str, base_url: str = None):
     else:
         raise ValueError(f"Provider {provider} not supported")
 
-from langchain.prompts import PromptTemplate
+from langchain_core.prompts import PromptTemplate
 
 QA_PROMPT = PromptTemplate.from_template("""
 Eres un Asistente Experto en Análisis de Sitios Web. Tu objetivo es responder preguntas basadas UNICAMENTE en el contexto proporcionado.
